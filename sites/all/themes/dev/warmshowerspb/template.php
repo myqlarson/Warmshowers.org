@@ -50,3 +50,7 @@ function phptemplate_username($object) {
 
   return $output;
 }
+
+function warmshowerspb_preprocess_user_profile($v){ 
+	$v['user_profile'] .= '<h3>SOME TESTING HTML</h3> And other stuff to follow:';
+}

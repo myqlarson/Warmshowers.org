@@ -345,7 +345,7 @@ function _user_location_view($edit, $user) {
   $showvalue['country']['value'] = $countrylist[$user->country];
   $provincelist = _user_location_provincelist($user->country);
   $showvalue['province']['value'] = $provincelist[$user->province];
-  $user->content['#mapHTML'] = $showvalue['map']['value'];
+  $user->content['mapHTML']['#value'] = $showvalue['map']['value'];
 
 }
 
