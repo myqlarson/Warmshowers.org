@@ -53,8 +53,7 @@ function phptemplate_username($object) {
 
 function warmshowerspb_preprocess_user_profile($v){ 
 	$account = $v['account'];
-	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category");
-	$intro[]  = array('#title' => "Member", '#value' => 'giggity goo' , '#type' => "user_profile_item");
+	
 	
 	
 	$v['profile']["DOESNTMATTERWHATTHISISNAMED"] =  drupal_render($intro);

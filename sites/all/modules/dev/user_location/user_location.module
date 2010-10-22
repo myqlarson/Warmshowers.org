@@ -321,7 +321,7 @@ function _user_location_validate($form, $user) { //CHANGEd all the $edits to $fo
 }
 
 /**
- * Display the user_location stuff on the user provile
+ * Display the user_location stuff on the user profile
  *
  * @param unknown_type $edit
  * @param unknown_type $user
@@ -348,6 +348,10 @@ function _user_location_view($edit, $user) {
   $user->content['mapHTML']['map']['#value'] = $showvalue['map']['value'];
   $user->content['mapHTML']['#type'] = 'user_profile_category';
   $user->content['mapHTML']['#title'] = 'Location Map';
+  
+  /*
+   * This displays the "Location Map" category on the user profile
+   */
   
 
 }

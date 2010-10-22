@@ -923,49 +923,65 @@ function wsuser_save(&$edit, &$user, $category) {
 
 
 
-function wsuser_view($user) {
+function wsuser_view($account) {
 
+	
+	$mail = theme('email_link',$account);
+$provincemap = _user_location_get_provincecode_to_province_map($account->country);
+$countrylist = _user_location_supported_countries();
+$countryname = $countrylist[$account->country];
+$province = $provincemap[$account->province];
 	$fieldlist = wsuser_fieldlist();
 	$showvalue = array();
 
-	unset($fieldlist['howdidyouhear']);  // Don't need this in the output
+	//INTRODUCTION CATEGORY ON  USER PROFILE
+	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category");
+	$intro[]  = array('#title' => t("Member"), '#value' => $account->fullname , '#type' => "user_profile_item");
+	
+	
 
-	foreach ($fieldlist as $item => $value) {
-		if(strlen($user->$item)) {
-			$showvalue[$item] = array(
-			'#title' => $fieldlist[$item]['title'],
-			'#value' => $user->$item,
-			'#type' => 'user_profile_item');
+$output .= theme('user_picture', $account);
 
-		}
+$output .= "<b>" . t("Member") . ":</b>";
+$output .= "<dl>";
+$nameinfo = $account->fullname;
 
-	}
-	
-	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
-		unset($showvalue[$item]);//we're aggregating these so we dont want to repeat	
-	
-  		if ($user->$item) {
-    		$services['#value'] .= "<li>".t($fieldlist[$item]['title'])."</li>";
-  		}
+/* THESE THREE NEED ITALICS */
+if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item"); }
+if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item"); }
+if ($account->status) { $intro[]  = array('#value' => ("This member is blocked") , '#type' => "user_profile_item"); }
 
-	}
-		
-	if (!$account->notcurrentlyavailable) {
-	  if ($services) {
-	    $services['#value'] .= "<ul>" . $services .  "</ul>";
-	    $services['#type'] = 'user_profile_item';
-	    $services['#title'] = "Services this host may offer";
-	    $showvalue[] = $services;
-	  }
-	}
+
+$intro[]  = array('#title' => t("Email"), '#value' => $mail , '#type' => "user_profile_item");
+	$intro[]  = array('#title' => t("Username"), '#value' => $account->name , '#type' => "user_profile_item");
+	$intro[]  = array('#value' => $account->street , '#type' => "user_profile_item");
+	$intro[]  = array('#value' => $account->additional , '#type' => "user_profile_item");
+	$intro[]  = array('#value' => "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname" , '#type' => "user_profile_item");
+					
+
+if ($account->URL) {
+	$intro[]  = array('#title' => t("Website"), '#value' => l($account->URL,$account->URL) , '#type' => "user_profile_item");
+	
+}
+
+$intro[]  = array('#title' => t("About this member"), '#value' => $account->comments , '#type' => "user_profile_item");
+
 	
 	
-	$user->content['Member Information'] = $showvalue;
-	$user->content['Member Information']['#type'] = 'user_profile_category';
-	$user->content['Member Information']['#title'] = 'Member Information';
+	//MEMBER INFORMATION CATEGORY ON  USER PROFILE
 	
 	
-	$user->content['summary']['last_login'] = array(
+	
+	
+	
+	$account->content['Intro'] = $intro;
+	$account->content['Member Information'] = $showvalue;
+	$account->content['Member Information']['#type'] = 'user_profile_category';
+	$account->content['Member Information']['#title'] = 'Member Information';
+	
+	
+	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
+	$account->content['summary']['last_login'] = array(
   '#type' => 'user_profile_item',
   '#title' => "Last login was",
   '#value' => format_interval(time() - $account->login) . " " . t("ago"));
