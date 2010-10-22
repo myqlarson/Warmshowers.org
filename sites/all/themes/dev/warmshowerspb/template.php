@@ -52,5 +52,12 @@ function phptemplate_username($object) {
 }
 
 function warmshowerspb_preprocess_user_profile($v){ 
-	$v['user_profile'] .= '<h3>SOME TESTING HTML</h3> And other stuff to follow:';
+	$account = $v['account'];
+	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category");
+	$intro[]  = array('#title' => "Member", '#value' => 'giggity goo' , '#type' => "user_profile_item");
+	
+	
+	$v['profile']["DOESNTMATTERWHATTHISISNAMED"] =  drupal_render($intro);
+	$v['user_profile'] = implode($v['profile']);
+	//$v['user_profile'] .= '<h3>SOME TESTING HTML</h3> And other stuff to follow:';
 }

@@ -933,15 +933,45 @@ function wsuser_view($user) {
 	foreach ($fieldlist as $item => $value) {
 		if(strlen($user->$item)) {
 			$showvalue[$item] = array(
-			'title' => $fieldlist[$item]['title'],
-			//'value' => wsuser_view_item($user->$item, $fieldlist[$item]['title']),
-			'value' => $user->$item,
-			'class' => 'value');
+			'#title' => $fieldlist[$item]['title'],
+			'#value' => $user->$item,
+			'#type' => 'user_profile_item');
 
 		}
 
 	}
-	return array('Member Information' => $showvalue);
+	
+	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
+		unset($showvalue[$item]);//we're aggregating these so we dont want to repeat	
+	
+  		if ($user->$item) {
+    		$services['#value'] .= "<li>".t($fieldlist[$item]['title'])."</li>";
+  		}
+
+	}
+		
+	if (!$account->notcurrentlyavailable) {
+	  if ($services) {
+	    $services['#value'] .= "<ul>" . $services .  "</ul>";
+	    $services['#type'] = 'user_profile_item';
+	    $services['#title'] = "Services this host may offer";
+	    $showvalue[] = $services;
+	  }
+	}
+	
+	
+	$user->content['Member Information'] = $showvalue;
+	$user->content['Member Information']['#type'] = 'user_profile_category';
+	$user->content['Member Information']['#title'] = 'Member Information';
+	
+	
+	$user->content['summary']['last_login'] = array(
+  '#type' => 'user_profile_item',
+  '#title' => "Last login was",
+  '#value' => format_interval(time() - $account->login) . " " . t("ago"));
+	
+	
+	
 
 
 }
