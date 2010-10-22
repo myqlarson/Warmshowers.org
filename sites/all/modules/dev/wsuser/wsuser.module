@@ -935,16 +935,12 @@ $province = $provincemap[$account->province];
 	$showvalue = array();
 
 	//INTRODUCTION CATEGORY ON  USER PROFILE
-	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category");
+	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category", '#weight' => -20, '#sorted' => TRUE);
+	$intro[]  = array('#value' => theme('user_picture', $account) , '#type' => "user_profile_item");
+	
+	
 	$intro[]  = array('#title' => t("Member"), '#value' => $account->fullname , '#type' => "user_profile_item");
 	
-	
-
-$output .= theme('user_picture', $account);
-
-$output .= "<b>" . t("Member") . ":</b>";
-$output .= "<dl>";
-$nameinfo = $account->fullname;
 
 /* THESE THREE NEED ITALICS */
 if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item"); }
