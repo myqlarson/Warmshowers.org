@@ -1001,8 +1001,8 @@ function wsuser_view($account) {
 	  	}
 	}
 	
-	$account->content['Intro'] = $intro;
-	$account->content['Member_Information'] = $mem_info;
+	$account->content['intro'] = $intro;
+	$account->content['member_information'] = $mem_info;
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
 	$account->content['summary']['last_login'] = array(
@@ -1010,15 +1010,20 @@ function wsuser_view($account) {
   '#title' => "Last login was",
   '#value' => format_interval(time() - $account->login) . " " . t("ago"));
 	
-	$account->content['Views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('class' => 'no-margin inline'));
-	$account->content['Views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
+	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('class' => 'no-margin inline'));
+	$account->content['views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
 	
 }
 
 function wsuser_profile_alter($a){
 	unset($a->content['user_picture']);//we're already using it where we want it
-	$a->content[''];
-	//set weights here
+	$a->content['intro']['#weight'] =  -20;
+	$a->content['mapHTML']['#weight'] =  -10;
+	$a->content['history']['#weight'] =  0;
+	$a->content['member_information']['#weight'] =  10;
+	$a->content['views']['#weight'] =  20;
+	$a->content['flags']['#weight'] =  30;
+	//set weights here to get proper order... or at least mirror what's there now (intro/map/history/info/recos/actions)
 }
 function wsuser_view_item($item, $description) {
 	if ($item) {
