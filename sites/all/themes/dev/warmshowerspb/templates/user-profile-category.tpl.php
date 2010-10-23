@@ -25,12 +25,12 @@
  * @see template_preprocess_user_profile_category()
  */
 ?>
-<fieldset>
+<fieldset<?php print $attributes; ?>>
 <?php if ($title) : ?>
   <legend><?php print $title; ?></legend>
 <?php endif; ?>
 
-<dl<?php print $attributes; ?>>
+
   <?php print $profile_items; ?>
-</dl>
+
 </fieldset>

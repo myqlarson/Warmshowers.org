@@ -925,12 +925,11 @@ function wsuser_save(&$edit, &$user, $category) {
 
 function wsuser_view($account) {
 
-	
 	$mail = theme('email_link',$account);
-$provincemap = _user_location_get_provincecode_to_province_map($account->country);
-$countrylist = _user_location_supported_countries();
-$countryname = $countrylist[$account->country];
-$province = $provincemap[$account->province];
+	$provincemap = _user_location_get_provincecode_to_province_map($account->country);
+	$countrylist = _user_location_supported_countries();
+	$countryname = $countrylist[$account->country];
+	$province = $provincemap[$account->province];
 	$fieldlist = wsuser_fieldlist();
 	$showvalue = array();
 
@@ -938,43 +937,72 @@ $province = $provincemap[$account->province];
 	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category", '#weight' => -20, '#sorted' => TRUE);
 	$intro[]  = array('#value' => theme('user_picture', $account) , '#type' => "user_profile_item");
 	
-	
-	$intro[]  = array('#title' => t("Member"), '#value' => $account->fullname , '#type' => "user_profile_item");
-	
+	if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
+	if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
+	if (!$account->status) { $intro[]  = array('#value' => ("This member is blocked") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 
-/* THESE THREE NEED ITALICS */
-if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item"); }
-if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item"); }
-if ($account->status) { $intro[]  = array('#value' => ("This member is blocked") , '#type' => "user_profile_item"); }
+	$memVal[] = '<span class="bold">' . $account->fullname . '</span>';
+    $memVal[] .= t("Email") . ": ". $mail;
+	$memVal[]  = t("Username") . ": ".$account->name;
+	$memVal[]  =  $account->street;
+	$memVal[]  = $account->additional;
+	$memVal[]  = "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname";
+	foreach($memVal as $key => $data){ $memVal[$key] = "<dd>" . $data . "</dd>"; }
+	$intro[]  = array('#title' => t("Member"),'#value' => implode($memVal) , '#type' => "user_profile_item" );
+
+	if ($account->URL) {
+		$intro[]  = array('#title' => t("Website"), '#value' => l($account->URL,$account->URL) , '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));	
+	}
+
+	$intro[]  = array('#title' => t("About this member"), '#value' => $account->comments , '#type' => "user_profile_item");
+
+	//MEMBER INFORMATION CATEGORY ON  USER PROFILE	
+	$mem_info = array('#title' => 'Member Information',  '#type' => "user_profile_category", '#weight' => 0, '#sorted' => TRUE, '#attributes' => array('id' => 'member-info'));
+
+	if ($account->homephone || $account->mobilephone || $account->workphone || $account->fax_number) {
+		$phoneVal[] = ($account->homephone) ? '<span class="title">Home</span>: <span class="data">' . $account->homephone . '</span>' : "";
+		$phoneVal[] = ($account->mobilephone) ? '<span class="title">Mobile</span>: <span class="data">' . $account->mobilephone . '</span>' : "";
+		$phoneVal[] = ($account->workphone) ? '<span class="title">Work</span>: <span class="data">' . $account->workphone . '</span>' : "";
+		$phoneVal[] = ($account->fax_number) ? '<span class="title">Fax</span>: <span class="data">' . $account->fax_number . '</span>' : "";
+		foreach($phoneVal as $key => $val){
+			$extra_class = ($key == 0) ? " first" : "";
+			$phoneVal[$key] = '<span class="phone-item'.$extra_class.'">'. $val . '</span>';
+		}
+		$phoneVal = implode($phoneVal);
+		$mem_info[]  = array('#title' => t("Phones"), '#value' => $phoneVal, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));
+	}
+	
+	if ($account->notcurrentlyavailable){
+		$mem_pref[]  = array('#value' => t("This user is set as unavailable, possibly on the road, so much of their information is not shown"), '#type' => "user_profile_item",'#attributes' => array('class' => 'bold italic'));
+	} else {
+		$mem_info[]  = array('#value' => l(t("View members near this one on the map"),"map/" . drupal_urlencode("uid=" . $account->uid)), '#type' => "user_profile_item");
+		$mem_info[]  = ($account->preferred_notice) ? array('#title' => t("Preferred Notice"), '#value' => $account->preferred_notice, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->maxcyclists) ? array('#title' => t("Maximum Guests"), '#value' => ($account->maxcyclists < 5) ? $account->maxcyclists :t("5 or more"), '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->motel) ? array('#title' => t("Nearest hotel/motel/accomodation"), '#value' => $account->motel, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->campground) ? array('#title' => t("Nearest Campground"), '#value' => $account->campground, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->bikeshop) ? array('#title' => t("Nearest Bike Shop"), '#value' => $account->bikeshop, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->languagesspoken) ? array('#title' => t("Languages Spoken"), '#value' => $account->languagesspoken, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+	}
+	$mem_info[]  = array( '#value' => implode($mem_pref), '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));
 
 
-$intro[]  = array('#title' => t("Email"), '#value' => $mail , '#type' => "user_profile_item");
-	$intro[]  = array('#title' => t("Username"), '#value' => $account->name , '#type' => "user_profile_item");
-	$intro[]  = array('#value' => $account->street , '#type' => "user_profile_item");
-	$intro[]  = array('#value' => $account->additional , '#type' => "user_profile_item");
-	$intro[]  = array('#value' => "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname" , '#type' => "user_profile_item");
-					
-
-if ($account->URL) {
-	$intro[]  = array('#title' => t("Website"), '#value' => l($account->URL,$account->URL) , '#type' => "user_profile_item");
+	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
+	 	if ($account->$item) {
+		   	$extra_class = (empty($services2)) ? " first" :"";
+			$services2[$item] = '<span class="phone-item'.$extra_class.'">'. $fieldlist[$item]['title'] . '</span>';
+	   	}
+	}
+	$services2 = implode($services2);
 	
-}
-
-$intro[]  = array('#title' => t("About this member"), '#value' => $account->comments , '#type' => "user_profile_item");
-
-	
-	
-	//MEMBER INFORMATION CATEGORY ON  USER PROFILE
-	
-	
-	
-	
+	if (!$account->notcurrentlyavailable) {
+	  	if ($services2) {
+			//$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => "<ul>$services</ul>", '#type' => "user_profile_item",'#attributes' => array('class' => 'no-margin'));
+			$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => $services2, '#type' => "user_profile_item",'#attributes' => array('class' => 'no-margin inline'));
+	  	}
+	}
 	
 	$account->content['Intro'] = $intro;
-	$account->content['Member Information'] = $showvalue;
-	$account->content['Member Information']['#type'] = 'user_profile_category';
-	$account->content['Member Information']['#title'] = 'Member Information';
-	
+	$account->content['Member_Information'] = $mem_info;
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
 	$account->content['summary']['last_login'] = array(
@@ -982,12 +1010,16 @@ $intro[]  = array('#title' => t("About this member"), '#value' => $account->comm
   '#title' => "Last login was",
   '#value' => format_interval(time() - $account->login) . " " . t("ago"));
 	
+	$account->content['Views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('class' => 'no-margin inline'));
+	$account->content['Views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
 	
-	
-
-
 }
 
+function wsuser_profile_alter($a){
+	unset($a->content['user_picture']);//we're already using it where we want it
+	$a->content[''];
+	//set weights here
+}
 function wsuser_view_item($item, $description) {
 	if ($item) {
 		$output = '<b>';
