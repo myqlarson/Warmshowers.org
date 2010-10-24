@@ -958,12 +958,12 @@ function wsuser_view($account) {
 
 	//MEMBER INFORMATION CATEGORY ON  USER PROFILE	
 	$mem_info = array('#title' => 'Member Information',  '#type' => "user_profile_category", '#weight' => 0, '#sorted' => TRUE, '#attributes' => array('id' => 'member-info'));
-
+	
 	if ($account->homephone || $account->mobilephone || $account->workphone || $account->fax_number) {
-		$phoneVal[] = ($account->homephone) ? '<span class="title">Home</span>: <span class="data">' . $account->homephone . '</span>' : "";
-		$phoneVal[] = ($account->mobilephone) ? '<span class="title">Mobile</span>: <span class="data">' . $account->mobilephone . '</span>' : "";
-		$phoneVal[] = ($account->workphone) ? '<span class="title">Work</span>: <span class="data">' . $account->workphone . '</span>' : "";
-		$phoneVal[] = ($account->fax_number) ? '<span class="title">Fax</span>: <span class="data">' . $account->fax_number . '</span>' : "";
+		if($account->homephone){ $phoneVal[] = '<span class="title">Home</span>: <span class="data">' . $account->homephone . '</span>'; }
+		if($account->mobilephone){ $phoneVal[] = '<span class="title">Mobile</span>: <span class="data">' . $account->mobilephone . '</span>'; }
+		if($account->workphone){ $phoneVal[] = '<span class="title">Work</span>: <span class="data">' . $account->workphone . '</span>'; }
+		if($account->fax_number){ $phoneVal[] = '<span class="title">Fax</span>: <span class="data">' . $account->fax_number . '</span>'; }
 		foreach($phoneVal as $key => $val){
 			$extra_class = ($key == 0) ? " first" : "";
 			$phoneVal[$key] = '<span class="phone-item'.$extra_class.'">'. $val . '</span>';
@@ -973,7 +973,7 @@ function wsuser_view($account) {
 	}
 	
 	if ($account->notcurrentlyavailable){
-		$mem_pref[]  = array('#value' => t("This user is set as unavailable, possibly on the road, so much of their information is not shown"), '#type' => "user_profile_item",'#attributes' => array('class' => 'bold italic'));
+		$mem_info[]  = array('#value' => t("This user is set as unavailable, possibly on the road, so much of their information is not shown"), '#type' => "user_profile_item",'#attributes' => array('class' => 'bold italic'));
 	} else {
 		$mem_info[]  = array('#value' => l(t("View members near this one on the map"),"map/" . drupal_urlencode("uid=" . $account->uid)), '#type' => "user_profile_item");
 		$mem_info[]  = ($account->preferred_notice) ? array('#title' => t("Preferred Notice"), '#value' => $account->preferred_notice, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
@@ -983,8 +983,6 @@ function wsuser_view($account) {
 		$mem_info[]  = ($account->bikeshop) ? array('#title' => t("Nearest Bike Shop"), '#value' => $account->bikeshop, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
 		$mem_info[]  = ($account->languagesspoken) ? array('#title' => t("Languages Spoken"), '#value' => $account->languagesspoken, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
 	}
-	$mem_info[]  = array( '#value' => implode($mem_pref), '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));
-
 
 	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
 	 	if ($account->$item) {
@@ -1005,10 +1003,8 @@ function wsuser_view($account) {
 	$account->content['member_information'] = $mem_info;
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
-	$account->content['summary']['last_login'] = array(
-  '#type' => 'user_profile_item',
-  '#title' => "Last login was",
-  '#value' => format_interval(time() - $account->login) . " " . t("ago"));
+	$account->content['summary']['last_login'] = array('#type' => 'user_profile_item',  '#title' => "Last login was",
+  	'#value' => format_interval(time() - $account->login) . " " . t("ago"));
 	
 	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('class' => 'no-margin inline'));
 	$account->content['views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
