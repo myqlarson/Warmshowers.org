@@ -50,10 +50,3 @@ function phptemplate_username($object) {
 
   return $output;
 }
-
-function warmshowerspb_preprocess_user_profile($v){ 
-	$account = $v['account'];
-	$v['profile']["DOESNTMATTERWHATTHISISNAMED"] =  drupal_render($intro);
-	$v['user_profile'] = implode($v['profile']);
-	//$v['user_profile'] .= '<h3>SOME TESTING HTML</h3> And other stuff to follow:';
-}

@@ -102,6 +102,8 @@ function wsuser_theme() {
       array('arguments' => array('email' => NULL) ),
   'email_link' =>
       array('arguments' => array('userobj' => NULL)),
+  'user_profile_mem_vals' =>
+      array('arguments' => array('data' => NULL))
   );
 }
 
@@ -941,14 +943,13 @@ function wsuser_view($account) {
 	if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 	if (!$account->status) { $intro[]  = array('#value' => ("This member is blocked") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 
-	$memVal[] = '<span class="bold">' . $account->fullname . '</span>';
-    $memVal[] .= t("Email") . ": ". $mail;
-	$memVal[]  = t("Username") . ": ".$account->name;
-	$memVal[]  =  $account->street;
+	$memVal[] = $account->fullname;//'<span class="bold">' . $account->fullname . '</span>';
+    $memVal[] .= t("Email") . ": ". $account->mail;
+	$memVal[]  = t("Username") . ": ". $account->name;
+	$memVal[]  = $account->street;
 	$memVal[]  = $account->additional;
 	$memVal[]  = "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname";
-	foreach($memVal as $key => $data){ $memVal[$key] = "<dd>" . $data . "</dd>"; }
-	$intro[]  = array('#title' => t("Member"),'#value' => implode($memVal) , '#type' => "user_profile_item" );
+	$intro[]  = array('#title' => t("Member"),'#value' => $memVal , '#type' => "user_profile_mem_vals" );
 
 	if ($account->URL) {
 		$intro[]  = array('#title' => t("Website"), '#value' => l($account->URL,$account->URL) , '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));	
@@ -994,7 +995,6 @@ function wsuser_view($account) {
 	
 	if (!$account->notcurrentlyavailable) {
 	  	if ($services2) {
-			//$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => "<ul>$services</ul>", '#type' => "user_profile_item",'#attributes' => array('class' => 'no-margin'));
 			$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => $services2, '#type' => "user_profile_item",'#attributes' => array('class' => 'no-margin inline'));
 	  	}
 	}
@@ -1680,4 +1680,13 @@ function wsuser_send_email_action($object, $context) {
   else {
     watchdog('error', 'Unable to send email to %recipient', array('%recipient' => $recipient));
   }
+}
+
+function theme_user_profile_mem_vals($array){ 
+	foreach($array['#value'] as $key => $value){
+		$array['#value'][$key] = "<dd>" . check_plain($value) . "</dd>";
+	}
+	$array['#type'] = 'user_profile_item';
+	$array['#value'] = implode($array['#value']);
+	return theme('user_profile_item', $array);
 }
