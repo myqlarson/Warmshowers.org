@@ -1023,28 +1023,122 @@ function wsuser_view_item($item, $description) {
 
 function wsuser_form($edit, $user, $category) {
 
-	$fields['wsuser'] = array(
-	'#type' => 'fieldset',
-	'#title' => t("Member Information"),
+	$form['wsuser'] = array(
+         '#type' => 'fieldset',
+         '#title' => 'Member Information',
+         	'fullname' => array(
+            '#type' => 'textfield',
+            '#title' => 'Full Name',
+            '#description' => 'Please enter your full name (including last name).<br />If you do not enter your full name your account may not be activated.', 
+            '#required' => '1'),
+ 
+            'comments' => array(
+            	'#title' => 'About You',
+                '#type' => 'textarea',
+                '#rows' => '5',
+                '#cols' => '40',
+                '#required' => '1',
+                '#description' => "Please introduce yourself. Say something about your hosting capabilities, cycle touring experience, or your current trip if you're on one right now. <em><strong>You must put something descriptive here or your account will be deleted.</strong></em> Also, please mention any restrictive or distinctive things about you: Are you vegetarian? Have pets? Smoker? Allergies?" ),
+ 
+            'notcurrentlyavailable' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Not Currently Available (Please add a note in the comments field to say why, and remember to update this when you get back!)',
+                    '#description' => 'Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists."'),
+ 
+            'homephone' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Home Phone Number'),
+ 
+            'mobilephone' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Mobile Phone'),
+ 
+            'workphone' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Work Phone Number'),
+ 
+            'fax_number' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Fax Number'),
+ 
+            'preferred_notice' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Preferred Notice',
+                    '#description' => 'If you require significant advance notice, please mention it here. <em>All cyclists should give as much notice as possible.</em> )'),
+ 
+            'maxcyclists' => array(
+                    '#type' => 'select',
+                    '#title' => 'Maximum Guests',
+                    '#description' => 'Maximum number of cyclists you could host at one time',
+                    '#options' =>  array(1 => "1", 2 => "2", 3=>"3",  4=>"4", 5=>t("5 or more"))),
+ 
+            'motel' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Distance to nearest hotel/motel'),
+ 
+            'campground' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Distance to nearest campground'),
+ 
+            'bikeshop' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Distance to nearest bike shop'),
+ 
+            'languagesspoken' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Languages spoken'),
+ 
+            'URL' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Your website',
+                    '#description' => 'URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don\'t have one.'),
+ 
+            'offering_explanation' => array(
+                    '#prefix' => '<div class="form-item"><label class="items-to-offer">', 
+                    '#suffix' => '</label></div>' ,
+                    '#type' => 'markup',
+                    '#value' => 'Services I may be able to offer to a visiting cyclist:)'),
+ 
+            'bed' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Bed'),
+ 
+            'food' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Food'),
+ 
+            'laundry' => array (
+                    '#type' => 'checkbox',
+                    '#title' => 'Laundry'),
+ 
+            'lawnspace' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Lawn Space (for camping)'),
+ 
+            'sag' => array (
+                    '#type' => 'checkbox',
+                    '#title' => 'SAG (vehicle support)'),
+ 
+            'shower' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Shower'),
+ 
+            'storage' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Storage'),
+ 
+            'kitchenuse' => array(
+                    '#type' => 'checkbox',
+                    '#title' => 'Use of Kitchen'),
+ 
+            'howdidyouhear' => array(
+                    '#type' => 'textfield',
+                    '#title' => 'Please let us know how you heard about WarmShowers.org')
+ 
 	);
+	
+	return $form;
 
-
-
-	$defaults = wsuser_form_defaults($edit, $user);
-	$fieldlist = wsuser_fieldlist();
-
-	foreach ($fieldlist as $field => $attribs) {
-		$arr = array();
-		foreach ($attribs as $tag => $val) {
-			$arr["#$tag"] = $val;
-		}
-
-		$fields['wsuser'][$field] = $arr;
-		if ($defaults[$field]) {
-			$fields['wsuser'][$field]['#default_value'] = $defaults[$field];
-		}
-	}
-	return $fields;
 }
 
 
