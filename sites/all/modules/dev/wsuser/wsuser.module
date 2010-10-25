@@ -845,9 +845,9 @@ function wsuser_view_item($item, $description) {
 
 function wsuser_form($edit, $account, $category) {
 
-	$form['wsuser'] = array(
+	$form['wsuser']['personal'] = array(
          '#type' => 'fieldset',
-         '#title' => 'Member Information',
+         '#title' => 'Personal Information',
          	'fullname' => array(
 				'#default_value' => isset($edit['fullname']) ? $edit['fullname'] : '',
 	            '#type' => 'textfield',
@@ -863,12 +863,6 @@ function wsuser_form($edit, $account, $category) {
                 '#cols' => '40',
                 '#required' => '1',
                 '#description' => "Please introduce yourself. Say something about your hosting capabilities, cycle touring experience, or your current trip if you're on one right now. <em><strong>You must put something descriptive here or your account will be deleted.</strong></em> Also, please mention any restrictive or distinctive things about you: Are you vegetarian? Have pets? Smoker? Allergies?" ),
- 
-            'notcurrentlyavailable' => array(
-				'#default_value' => isset($edit['notcurrentlyavailable']) ? $edit['notcurrentlyavailable'] : '',
-            	'#type' => 'checkbox',
-                '#title' => 'Not Currently Available (Please add a note in the comments field to say why, and remember to update this when you get back!)',
-                '#description' => 'Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists."'),
  
             'homephone' => array(
 				'#default_value' => isset($edit['homephone']) ? $edit['homephone'] : '',
@@ -890,7 +884,34 @@ function wsuser_form($edit, $account, $category) {
                 '#type' => 'textfield',
                 '#title' => 'Fax Number'),
  
-            'preferred_notice' => array(
+            'languagesspoken' => array(
+				'#default_value' => isset($edit['languagesspoken']) ? $edit['languagesspoken'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Languages spoken'),
+ 
+            'URL' => array(
+				'#default_value' => isset($edit['URL']) ? $edit['URL'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Your website',
+                '#description' => 'URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don\'t have one.'),
+ 
+ 
+            'howdidyouhear' => array(
+				'#default_value' => isset($edit['howdidyouhear']) ? $edit['howdidyouhear'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Please let us know how you heard about WarmShowers.org'),
+		);
+	$form['wsuser']['hosting']=	array(		 
+		 '#type' => 'fieldset',
+         '#title' => 'Hosting Information',
+	
+			'notcurrentlyavailable' => array(
+				'#default_value' => isset($edit['notcurrentlyavailable']) ? $edit['notcurrentlyavailable'] : '',
+            	'#type' => 'checkbox',
+                '#title' => 'Not Currently Available (Please add a note in the comments field to say why, and remember to update this when you get back!)',
+                '#description' => 'Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists."'),
+ 
+			'preferred_notice' => array(
 				'#default_value' => isset($edit['preferred_notice']) ? $edit['preferred_notice'] : '',
 	          	'#type' => 'textfield',
     	        '#title' => 'Preferred Notice',
@@ -917,19 +938,8 @@ function wsuser_form($edit, $account, $category) {
 				'#default_value' => isset($edit['bikeshop']) ? $edit['bikeshop'] : '',
                 '#type' => 'textfield',
                 '#title' => 'Distance to nearest bike shop'),
- 
-            'languagesspoken' => array(
-				'#default_value' => isset($edit['languagesspoken']) ? $edit['languagesspoken'] : '',
-                '#type' => 'textfield',
-                '#title' => 'Languages spoken'),
- 
-            'URL' => array(
-				'#default_value' => isset($edit['URL']) ? $edit['URL'] : '',
-                '#type' => 'textfield',
-                '#title' => 'Your website',
-                '#description' => 'URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don\'t have one.'),
- 
-            'offering_explanation' => array(
+	
+			'offering_explanation' => array(
 				'#default_value' => isset($edit['offering_explanation']) ? $edit['offering_explanation'] : '',
                 '#prefix' => '<div class="form-item"><label class="items-to-offer">', 
                 '#suffix' => '</label></div>' ,
@@ -975,12 +985,6 @@ function wsuser_form($edit, $account, $category) {
             	'#default_value' => isset($edit['kitchenuse']) ? $edit['kitchenuse'] : '',    
             	'#type' => 'checkbox',
                 '#title' => 'Use of Kitchen'),
- 
-            'howdidyouhear' => array(
-				'#default_value' => isset($edit['howdidyouhear']) ? $edit['howdidyouhear'] : '',
-                '#type' => 'textfield',
-                '#title' => 'Please let us know how you heard about WarmShowers.org')
- 
 	);
 	
 	return $form;
