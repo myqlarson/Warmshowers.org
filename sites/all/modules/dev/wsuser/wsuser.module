@@ -91,25 +91,6 @@ function wsuser_menu() {
 }
 
 /**
- * Implementation of hook_theme()
- * Defines the email_addr and email_link theme functions
- *
- * @return unknown_type
- */
-function wsuser_theme() {
-  return array(
-  'email_addr' =>
-      array('arguments' => array('email' => NULL) ),
-  'email_link' =>
-      array('arguments' => array('userobj' => NULL)),
-  'user_profile_mem_vals' =>
-      array('arguments' => array('data' => NULL)),
-  'user_profile_inline_list' =>
-      array('arguments' => array('data' => NULL))     
-      );
-}
-
-/**
  * Implementation of hook_token_values()
  * Provide tokens for replacement by token module
  * @param $type
@@ -697,157 +678,6 @@ function wsuser_load(&$user) {
 }
 
 
-// TODO: Change notcurrentlyavailable into host type (host, guest, both)
-function wsuser_fieldlist() {
-
-	$fields = array(
-	'fullname' => array(
-	'type' => 'textfield',
-	'title' => t('Full Name'),
-	'description' => t("Please enter your full name (including last name)"),
-	'required' => TRUE
-	),
-	'comments' => array(
-	'title' => t("About You"),
-	'type' => 'textarea',
-	'rows' => '5',
-	'cols' => '40',
-	'required' => TRUE,
-	'description' => t("Please introduce yourself. Say something about your hosting capabilities, cycle touring experience, or your current trip if you're on one right now. <em><strong>You must put something descriptive here or your account will be deleted.</strong></em> Also, please mention any restrictive or distinctive things about you: Are you vegetarian? Have pets? Smoker? Allergies? "),
-	),
-
-	'notcurrentlyavailable' => array(
-	'type' => 'checkbox',
-	'title' => t('Not Currently Available'),
-	'description' => t('Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists.'),
-	),
-	'homephone' => array(
-	'type' => 'textfield',
-	'title' => t("Home Phone Number"),
-	),
-	'mobilephone' => array(
-	'type' => 'textfield',
-	'title' => t("Mobile Phone"),
-	),
-	'workphone' => array(
-	'type' => 'textfield',
-	'title' => t("Work Phone Number"),
-	),
-
-	'fax_number' => array(
-	'type' => 'textfield',
-	'title' => t("Fax Number"),
-	),
-	'preferred_notice' => array(
-	'type' => 'textfield',
-	'title' => t('Preferred Notice'),
-	'description' => t("If you require significant advance notice, please mention it here. <em>All cyclists should give as much notice as possible.</em>"),
-
-	),
-	'maxcyclists' => array(
-	'type' => 'select',
-	'title' => t("Maximum Guests"),
-	'description' => t("Maximum number of cyclists you could host at one time"),
-	'options' => array(1 => "1", 2 => "2", 3=>"3",  4=>"4", 5=>t("5 or more")),
-
-	),
-
-
-
-	'motel' => array(
-	'type' => 'textfield',
-	'title' => t("Distance to nearest hotel/motel"),
-
-	),
-	'campground' => array(
-	'type' => 'textfield',
-	'title' => t("Distance to nearest campground"),
-
-	),
-	'bikeshop' => array(
-	'type' => 'textfield',
-	'title' => t("Distance to nearest bike shop"),
-	),
-	'languagesspoken' => array(
-	'type' => 'textfield',
-	'title' => t('Languages spoken'),
-
-
-	),
-	'URL' => array(
-	'type' => 'textfield',
-	'title' => t("Your website"),
-	'description' => t("URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don't have one."),
-	),
-
-	'offering_explanation' => array(
-  	'prefix' => '<div class="form-item"><label class="items-to-offer">',
-  	'suffix' => '</label></div>',
-  	'type' => 'markup',
-  	'value' => t("Services I may be able to offer to a visiting cyclist:"),
-	),
-	'bed' => array(
-	'type' => 'checkbox',
-	'title' => t('Bed'),
-	),
-	'food' => array(
-	'type' => 'checkbox',
-	'title' => t('Food'),
-	),
-	'laundry' => array(
-	'type' => 'checkbox',
-	'title' => t('Laundry'),
-	),
-	'lawnspace' => array(
-	'type' => 'checkbox',
-	'title' => t('Lawn Space (for camping)'),
-	),
-	'sag' => array(
-	'type' => 'checkbox',
-	'title' => t('SAG (vehicle support)'),
-	),
-	'shower' => array(
-	'type' => 'checkbox',
-	'title' => t('Shower'),
-	),
-	'storage' => array(
-	'type' => 'checkbox',
-	'title' => t('Storage'),
-	),
-	'kitchenuse' => array(
-	'type' => 'checkbox',
-	'title' => t('Use of Kitchen'),
-	),
-	'howdidyouhear' => array(
-	'type' => 'textfield',
-	'title' => t("Please let us know how you heard about WarmShowers.org"),
-	),
-	);
-
-	return $fields;
-}
-
-function wsuser_form_defaults($edit, $user) {
-	$defaults = array();
-	$fields = wsuser_fieldlist();
-
-	// TODO: Surely this can be done more efficiently
-	if ($edit['fullname']) {
-		foreach($fields as $field => $value) {
-			$defaults[$field] = $edit[$field];
-
-		}
-	} else if ($user->fullname) {
-		foreach($fields as $field => $value) {
-			$defaults[$field] = $user->$field;
-
-		}
-
-	}
-	return $defaults;
-}
-
-
 /**
  * Delete wsuser entry on user deletion
  *
@@ -908,8 +738,10 @@ function wsuser_save(&$edit, &$user, $category) {
 	$valuenames = "uid,";
 	$values = array();
 	$values[] = $user->uid;
-	foreach (wsuser_fieldlist() as $item=>$value) {
-	  if ($value['type'] == 'fieldset' || $value['type'] == 'markup') {
+
+	$form = wsuser_form();
+	foreach ($form['wsuser'] as $item=>$value) {
+	  if ($value['type'] == 'fieldset' || $value['type'] == 'markup' || element_property($item)) {
 	    continue;
 	  }
 		$placeholders .= "'%s',";
@@ -933,7 +765,7 @@ function wsuser_view($account) {
 	$province = $provincemap[$account->province];
 
 	//INTRODUCTION CATEGORY ON  USER PROFILE
-	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category", '#weight' => -20, '#sorted' => TRUE);
+	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category", '#weight' => -20, '#sorted' => TRUE, '#attributes' => array('id' => 'introduction'));
 	
 	if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 	if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
@@ -945,7 +777,7 @@ function wsuser_view($account) {
     $memVal[] = array('#content' => $account->street);
     $memVal[] = array('#content' => $account->additional);
     $memVal[] = array('#content' => "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname");
-	$intro[]  = array('#title' => t("Member"),'#value' => $memVal , '#type' => "user_profile_mem_vals" );
+	$intro[]  = array('#title' => t("Member"),'#value' => $memVal , '#type' => "user_profile_mem_vals", '#dl_attributes' => array('class' => 'not-inline') );
 
 	if ($account->URL) {
 		$intro[]  = array('#title' => t("Website"), '#value' => l($account->URL,$account->URL) , '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));	
@@ -959,9 +791,9 @@ function wsuser_view($account) {
 	
 	if ($account->homephone || $account->mobilephone || $account->workphone || $account->fax_number) {
 		if($account->homephone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->homephone, '#content_attributes' => array('class' => 'bold')); }
-		if($account->mobilephone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->mobilephone, '#content_attributes' => array('class' => 'bold')); }
-		if($account->workphone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->workphone, '#content_attributes' => array('class' => 'bold')); }
-		if($account->fax_number){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->fax_number, '#content_attributes' => array('class' => 'bold')); }
+		if($account->mobilephone){ $phoneVal[] = array('#title' => 'Mobile' , '#content' => $account->mobilephone, '#content_attributes' => array('class' => 'bold')); }
+		if($account->workphone){ $phoneVal[] = array('#title' => 'Work' , '#content' => $account->workphone, '#content_attributes' => array('class' => 'bold')); }
+		if($account->fax_number){ $phoneVal[] = array('#title' => 'Fax' , '#content' => $account->fax_number, '#content_attributes' => array('class' => 'bold')); }
 		$mem_info[]  = array('#title' => t("Phones"), '#value' => $phoneVal, '#type' => "user_profile_inline_list", '#attributes' => array('class' => 'no-margin inline'));
 	}
 	
@@ -969,18 +801,18 @@ function wsuser_view($account) {
 		$mem_info[]  = array('#value' => t("This user is set as unavailable, possibly on the road, so much of their information is not shown"), '#type' => "user_profile_item",'#attributes' => array('class' => 'bold italic'));
 	} else {
 		$mem_info[]  = array('#value' => l(t("View members near this one on the map"),"map/" . drupal_urlencode("uid=" . $account->uid)), '#type' => "user_profile_item");
-		$mem_info[]  = ($account->preferred_notice) ? array('#title' => t("Preferred Notice"), '#value' => $account->preferred_notice, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
-		$mem_info[]  = ($account->maxcyclists) ? array('#title' => t("Maximum Guests"), '#value' => ($account->maxcyclists < 5) ? $account->maxcyclists :t("5 or more"), '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
-		$mem_info[]  = ($account->motel) ? array('#title' => t("Nearest hotel/motel/accomodation"), '#value' => $account->motel, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
-		$mem_info[]  = ($account->campground) ? array('#title' => t("Nearest Campground"), '#value' => $account->campground, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
-		$mem_info[]  = ($account->bikeshop) ? array('#title' => t("Nearest Bike Shop"), '#value' => $account->bikeshop, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
-		$mem_info[]  = ($account->languagesspoken) ? array('#title' => t("Languages Spoken"), '#value' => $account->languagesspoken, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
+		$mem_info[]  = ($account->preferred_notice) ? array('#title' => t("Preferred Notice"), '#value' => $account->preferred_notice, '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
+		$mem_info[]  = ($account->maxcyclists) ? array('#title' => t("Maximum Guests"), '#value' => ($account->maxcyclists < 5) ? $account->maxcyclists :t("5 or more"), '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
+		$mem_info[]  = ($account->motel) ? array('#title' => t("Nearest hotel/motel/accomodation"), '#value' => $account->motel, '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
+		$mem_info[]  = ($account->campground) ? array('#title' => t("Nearest Campground"), '#value' => $account->campground, '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
+		$mem_info[]  = ($account->bikeshop) ? array('#title' => t("Nearest Bike Shop"), '#value' => $account->bikeshop, '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
+		$mem_info[]  = ($account->languagesspoken) ? array('#title' => t("Languages Spoken"), '#value' => $account->languagesspoken, '#type' => "user_profile_item",'#dt_attributes' => array('class' => 'inline')) : "";
 	}
 
-	//change form
-	$fieldlist = wsuser_fieldlist();
+
+	$fieldlist = wsuser_form();
 	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
-	 	if ($account->$item) $services[] = array('#content' => $fieldlist[$item]['title']);
+	 	if ($account->$item) $services[] = array('#content' => $fieldlist['wsuser'][$item]['#title']);
 	}
 	
 	if (!$account->notcurrentlyavailable) {
@@ -993,24 +825,14 @@ function wsuser_view($account) {
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
 	$account->content['summary']['last_login'] = array('#type' => 'user_profile_item',  '#title' => "Last login was",
-  	'#value' => format_interval(time() - $account->login) . " " . t("ago"));
+  	'#value' => format_interval(time() - $account->login) . " " . t("ago"), '#dl_attributes' => array('class' => 'last'));
 	
-	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('class' => 'no-margin inline'));
+	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('id' => 'profile-view'));
 	$account->content['views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
 	
 }
 
-function wsuser_profile_alter($a){
-	array_unshift($a->content['intro'], $a->content['user_picture']); //we put the drupal produced picture at the beginning of intro
-	unset($a->content['user_picture']); //unset so we don't get two
-	$a->content['intro']['#weight'] =  -20;
-	$a->content['mapHTML']['#weight'] =  -10;
-	$a->content['history']['#weight'] =  0;
-	$a->content['member_information']['#weight'] =  10;
-	$a->content['views']['#weight'] =  20;
-	$a->content['flags']['#weight'] =  30;
-	//set weights here to get proper order... or at least mirror what's there now (intro/map/history/info/recos/actions)
-}
+
 function wsuser_view_item($item, $description) {
 	if ($item) {
 		$output = '<b>';
@@ -1021,18 +843,20 @@ function wsuser_view_item($item, $description) {
 
 
 
-function wsuser_form($edit, $user, $category) {
+function wsuser_form($edit, $account, $category) {
 
 	$form['wsuser'] = array(
          '#type' => 'fieldset',
          '#title' => 'Member Information',
          	'fullname' => array(
-            '#type' => 'textfield',
-            '#title' => 'Full Name',
-            '#description' => 'Please enter your full name (including last name).<br />If you do not enter your full name your account may not be activated.', 
-            '#required' => '1'),
+				'#default_value' => isset($edit['fullname']) ? $edit['fullname'] : '',
+	            '#type' => 'textfield',
+	            '#title' => 'Full Name',
+	            '#description' => 'Please enter your full name (including last name).<br />If you do not enter your full name your account may not be activated.', 
+	            '#required' => '1'),
  
             'comments' => array(
+				'#default_value' => isset($edit['comments']) ? $edit['comments'] : '',
             	'#title' => 'About You',
                 '#type' => 'textarea',
                 '#rows' => '5',
@@ -1041,99 +865,121 @@ function wsuser_form($edit, $user, $category) {
                 '#description' => "Please introduce yourself. Say something about your hosting capabilities, cycle touring experience, or your current trip if you're on one right now. <em><strong>You must put something descriptive here or your account will be deleted.</strong></em> Also, please mention any restrictive or distinctive things about you: Are you vegetarian? Have pets? Smoker? Allergies?" ),
  
             'notcurrentlyavailable' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Not Currently Available (Please add a note in the comments field to say why, and remember to update this when you get back!)',
-                    '#description' => 'Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists."'),
+				'#default_value' => isset($edit['notcurrentlyavailable']) ? $edit['notcurrentlyavailable'] : '',
+            	'#type' => 'checkbox',
+                '#title' => 'Not Currently Available (Please add a note in the comments field to say why, and remember to update this when you get back!)',
+                '#description' => 'Check this if you are not currently available to host cyclists. Please add a note to the "About Me" section saying why you\'re not available to host, and remember to uncheck it when you become available. Checking this box leaves you off the map, and off most of the lists."'),
  
             'homephone' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Home Phone Number'),
+				'#default_value' => isset($edit['homephone']) ? $edit['homephone'] : '',
+               	'#type' => 'textfield',
+                '#title' => 'Home Phone Number'),
  
             'mobilephone' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Mobile Phone'),
+				'#default_value' => isset($edit['mobilephone']) ? $edit['mobilephone'] : '',
+            	'#type' => 'textfield',
+                '#title' => 'Mobile Phone'),
  
             'workphone' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Work Phone Number'),
+				'#default_value' => isset($edit['workphone']) ? $edit['workphone'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Work Phone Number'),
  
             'fax_number' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Fax Number'),
+				'#default_value' => isset($edit['fax_number']) ? $edit['fax_number'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Fax Number'),
  
             'preferred_notice' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Preferred Notice',
-                    '#description' => 'If you require significant advance notice, please mention it here. <em>All cyclists should give as much notice as possible.</em> )'),
- 
-            'maxcyclists' => array(
-                    '#type' => 'select',
-                    '#title' => 'Maximum Guests',
-                    '#description' => 'Maximum number of cyclists you could host at one time',
-                    '#options' =>  array(1 => "1", 2 => "2", 3=>"3",  4=>"4", 5=>t("5 or more"))),
+				'#default_value' => isset($edit['preferred_notice']) ? $edit['preferred_notice'] : '',
+	          	'#type' => 'textfield',
+    	        '#title' => 'Preferred Notice',
+                '#description' => 'If you require significant advance notice, please mention it here. <em>All cyclists should give as much notice as possible.</em> )'),
+
+          	'maxcyclists' => array(
+				'#default_value' => isset($edit['maxcyclists']) ? $edit['maxcyclists'] : '',
+           		'#type' => 'select',
+               	'#title' => 'Maximum Guests',
+                '#description' => 'Maximum number of cyclists you could host at one time',
+                '#options' =>  array(1 => "1", 2 => "2", 3=>"3",  4=>"4", 5=>t("5 or more"))),
  
             'motel' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Distance to nearest hotel/motel'),
+				'#default_value' => isset($edit['motel']) ? $edit['motel'] : '',
+              	'#type' => 'textfield',
+                '#title' => 'Distance to nearest hotel/motel'),
  
             'campground' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Distance to nearest campground'),
+				'#default_value' => isset($edit['campground']) ? $edit['campground'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Distance to nearest campground'),
  
             'bikeshop' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Distance to nearest bike shop'),
+				'#default_value' => isset($edit['bikeshop']) ? $edit['bikeshop'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Distance to nearest bike shop'),
  
             'languagesspoken' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Languages spoken'),
+				'#default_value' => isset($edit['languagesspoken']) ? $edit['languagesspoken'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Languages spoken'),
  
             'URL' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Your website',
-                    '#description' => 'URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don\'t have one.'),
+				'#default_value' => isset($edit['URL']) ? $edit['URL'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Your website',
+                '#description' => 'URL of your website, if any, in form http://yourwebsite.com. Leave it blank if you don\'t have one.'),
  
             'offering_explanation' => array(
-                    '#prefix' => '<div class="form-item"><label class="items-to-offer">', 
-                    '#suffix' => '</label></div>' ,
-                    '#type' => 'markup',
-                    '#value' => 'Services I may be able to offer to a visiting cyclist:)'),
+				'#default_value' => isset($edit['offering_explanation']) ? $edit['offering_explanation'] : '',
+                '#prefix' => '<div class="form-item"><label class="items-to-offer">', 
+                '#suffix' => '</label></div>' ,
+                '#type' => 'markup',
+                '#value' => 'Services I may be able to offer to a visiting cyclist:)'),
  
             'bed' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Bed'),
+				'#default_value' => isset($edit['bed']) ? $edit['bed'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Bed'),
  
             'food' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Food'),
+				'#default_value' => isset($edit['food']) ? $edit['food'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Food'),
  
             'laundry' => array (
-                    '#type' => 'checkbox',
-                    '#title' => 'Laundry'),
+				'#default_value' => isset($edit['laundry']) ? $edit['laundry'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Laundry'),
  
             'lawnspace' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Lawn Space (for camping)'),
+				'#default_value' => isset($edit['lawnspace']) ? $edit['lawnspace'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Lawn Space (for camping)'),
  
             'sag' => array (
-                    '#type' => 'checkbox',
-                    '#title' => 'SAG (vehicle support)'),
+				'#default_value' => isset($edit['sag']) ? $edit['sag'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'SAG (vehicle support)'),
  
             'shower' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Shower'),
+				'#default_value' => isset($edit['shower']) ? $edit['shower'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Shower'),
  
             'storage' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Storage'),
+				'#default_value' => isset($edit['storage']) ? $edit['storage'] : '',
+                '#type' => 'checkbox',
+                '#title' => 'Storage'),
  
             'kitchenuse' => array(
-                    '#type' => 'checkbox',
-                    '#title' => 'Use of Kitchen'),
+            	'#default_value' => isset($edit['kitchenuse']) ? $edit['kitchenuse'] : '',    
+            	'#type' => 'checkbox',
+                '#title' => 'Use of Kitchen'),
  
             'howdidyouhear' => array(
-                    '#type' => 'textfield',
-                    '#title' => 'Please let us know how you heard about WarmShowers.org')
+				'#default_value' => isset($edit['howdidyouhear']) ? $edit['howdidyouhear'] : '',
+                '#type' => 'textfield',
+                '#title' => 'Please let us know how you heard about WarmShowers.org')
  
 	);
 	
@@ -1561,18 +1407,6 @@ function wsuser_member_list_csv($country,$province,$include_unavailable) {
   fclose($output);
 }
 
-function theme_email_addr($str) {
-	$mail = explode("@", $str);
-	return $mail[0] . " at " . $mail[1];
-}
-function theme_email_link($userobj) {
-  $result = '<a href="/user/' . $userobj->uid . '/contact">' . t('click to email') . '</a>';
-  if (user_access('view email addrs')) {
-    $result .= ' (<a href="mailto:' . $userobj->mail . '">'. $userobj->mail . '</a>)';
-  }
-	return $result;
-}
-
 function wsuser_output_profile(&$form_state, $args) {
 	$user = user_load(array('uid'=>arg(2)));
 	print theme('user_profile',$user);
@@ -1766,6 +1600,46 @@ function wsuser_send_email_action($object, $context) {
   }
 }
 
+/**
+ * Implementation of hook_theme()
+ * Defines the custom theme functions/templates
+ *
+ * @return unknown_type
+ */
+function wsuser_theme() {
+	$path = drupal_get_path("module", 'wsuser');
+  return array(
+ 
+  'email_addr' =>
+      array('arguments' => array('email' => NULL) ),
+  'email_link' =>
+      array('arguments' => array('userobj' => NULL)),
+  'user_profile_mem_vals' =>
+      array('arguments' => array('data' => NULL)),
+  'user_profile_inline_list' =>
+      array('arguments' => array('data' => NULL)),
+  'user_profile' =>
+      array('arguments' => array('account' => NULL),  'template' => "templates/user-profile"),
+   'user_profile_category' =>
+      array('arguments' => array('element' => NULL), 'template' => "templates/user-profile-category"),
+   'user_profile_item' =>
+      array('arguments' => array('element' => NULL), 'template' => "templates/user-profile-item")
+      );
+}
+
+function theme_email_addr($str) {
+	$mail = explode("@", $str);
+	return $mail[0] . " at " . $mail[1];
+}
+
+function theme_email_link($userobj) {
+  $result = '<a href="/user/' . $userobj->uid . '/contact">' . t('click to email') . '</a>';
+  if (user_access('view email addrs')) {
+    $result .= ' (<a href="mailto:' . $userobj->mail . '">'. $userobj->mail . '</a>)';
+  }
+	return $result;
+}
+
 function theme_user_profile_mem_vals($personalInfo){ 
 	foreach($personalInfo['#value'] as $key => $value){
 		
@@ -1800,7 +1674,27 @@ function theme_user_profile_inline_list($list){
 	$list['#type'] = 'user_profile_item';
 	$list['#value'] = implode($list['#value']);
 	return theme('user_profile_item', $list);
+}
 
+function wsuser_profile_alter($a){
+	array_unshift($a->content['intro'], $a->content['user_picture']); //we put the drupal produced picture at the beginning of intro
+	unset($a->content['user_picture']); //unset so we don't get two
+	$a->content['intro']['#weight'] =  -20;
+	$a->content['mapHTML']['#weight'] =  -10;
+	$a->content['history']['#weight'] =  0;
+	$a->content['member_information']['#weight'] =  10;
+	$a->content['views']['#weight'] =  20;
+	$a->content['flags']['#weight'] =  30;
+	$a->content['flags']['unresponsive_member']['#dl_attributes'] = array('class' => 'last');
+	//set weights here to get proper order... or at least mirror what's there now (intro/map/history/info/recos/actions)
 }
 	
-
+/*
+ * We preprocess here so that we have control over dl dt or dd to style separately if desired
+ */
+function wsuser_preprocess_user_profile_item($v){
+	$v['dl_attributes'] = drupal_attributes($v['element']['#dl_attributes']);
+	$v['dt_attributes'] = drupal_attributes($v['element']['#dt_attributes']);
+	$v['dd_attributes'] = drupal_attributes($v['element']['#dd_attributes']);
+	
+}
