@@ -23,9 +23,9 @@
  * @see template_preprocess_user_profile_item()
  */
 ?>
-<dl>
+<dl<?php print $dl_attributes; ?>>
 <?php if($title) :?>
-<dt<?php print $attributes; ?>><?php print $title; ?>:</dt>
+<dt<?php print $dt_attributes; ?>><?php print $title; ?>:</dt>
 <?php endif; ?>
-<dd<?php print $attributes; ?>><?php print $value; ?></dd>
+<dd<?php print $dd_attributes; ?>><?php print $value; ?></dd>
 </dl>

@@ -118,13 +118,15 @@ border: 2px solid black;
  * New styles for redesign that should go in the new theme
  */
 
-.profile dt.not-bold { font-weight:normal; }
-.inline { display: inline; }
+
+.user-profile dt, .user-profile dd { display: inline; }
 .inline-list-item { padding-left: 5px; margin-left:5px; border-left: 1px solid black;}
 .inline-list-item .title { margin-right:.3em; }
 .first { border:0px; }
-.italic, .inline-list-item .title { font-style: italic }
-.user-profile legend, .user-profile dt, .bold { font-weight: bold; }
-.no-margin, #member-info dd , .flag-profile dd, .user-member dd, #member-info dl, .user-member dl  { margin:0; }
 
- 
+.user-profile legend, .user-profile dt, .bold { font-weight: bold; }
+
+.no-margin, .user-profile dd, #member-info dl, .user-profile dl.last { margin:0; }
+.user-profile dl , #introduction .not-inline { margin:0 0 1em; }
+#introduction .not-inline dd  { display:block; margin-left:40px; }
+#introduction dd { margin-left:10px}
