@@ -103,8 +103,10 @@ function wsuser_theme() {
   'email_link' =>
       array('arguments' => array('userobj' => NULL)),
   'user_profile_mem_vals' =>
-      array('arguments' => array('data' => NULL))
-  );
+      array('arguments' => array('data' => NULL)),
+  'user_profile_inline_list' =>
+      array('arguments' => array('data' => NULL))     
+      );
 }
 
 /**
@@ -927,28 +929,22 @@ function wsuser_save(&$edit, &$user, $category) {
 
 function wsuser_view($account) {
 
-	$mail = theme('email_link',$account);
-	$provincemap = _user_location_get_provincecode_to_province_map($account->country);
-	$countrylist = _user_location_supported_countries();
 	$countryname = $countrylist[$account->country];
 	$province = $provincemap[$account->province];
-	$fieldlist = wsuser_fieldlist();
-	$showvalue = array();
 
 	//INTRODUCTION CATEGORY ON  USER PROFILE
 	$intro = array('#title' => 'Introduction',  '#type' => "user_profile_category", '#weight' => -20, '#sorted' => TRUE);
-	$intro[]  = array('#value' => theme('user_picture', $account) , '#type' => "user_profile_item");
 	
 	if ($account->isunreachable) { $intro[]  = array('#value' => t("This member is considered unreachable. Email has bounced or telephone contact has been unsuccessful") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 	if ($account->isstale) { $intro[]  = array( '#value' => t("This member is condered stale, as they have not logged into the system for a long time") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 	if (!$account->status) { $intro[]  = array('#value' => ("This member is blocked") , '#type' => "user_profile_item", '#attributes' => array('class' => 'italic')); }
 
-	$memVal[] = $account->fullname;//'<span class="bold">' . $account->fullname . '</span>';
-    $memVal[] .= t("Email") . ": ". $account->mail;
-	$memVal[]  = t("Username") . ": ". $account->name;
-	$memVal[]  = $account->street;
-	$memVal[]  = $account->additional;
-	$memVal[]  = "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname";
+	$memVal[] = array('#content' => $account->fullname, '#attributes' => array('class' => 'bold'));
+    $memVal[] = array('#title' => t("Email"), '#content' => $account,  'theme' =>'email_link');
+    $memVal[] = array('#title' => t("Username"), '#content' => $account->name);
+    $memVal[] = array('#content' => $account->street);
+    $memVal[] = array('#content' => $account->additional);
+    $memVal[] = array('#content' => "$account->city, $province " . (strtoupper($account->postal_code) != 'NONE' ? $account->postal_code : '') . " $countryname");
 	$intro[]  = array('#title' => t("Member"),'#value' => $memVal , '#type' => "user_profile_mem_vals" );
 
 	if ($account->URL) {
@@ -956,21 +952,17 @@ function wsuser_view($account) {
 	}
 
 	$intro[]  = array('#title' => t("About this member"), '#value' => $account->comments , '#type' => "user_profile_item");
-
+	$account->content['intro'] = $intro;
+	
 	//MEMBER INFORMATION CATEGORY ON  USER PROFILE	
 	$mem_info = array('#title' => 'Member Information',  '#type' => "user_profile_category", '#weight' => 0, '#sorted' => TRUE, '#attributes' => array('id' => 'member-info'));
 	
 	if ($account->homephone || $account->mobilephone || $account->workphone || $account->fax_number) {
-		if($account->homephone){ $phoneVal[] = '<span class="title">Home</span>: <span class="data">' . $account->homephone . '</span>'; }
-		if($account->mobilephone){ $phoneVal[] = '<span class="title">Mobile</span>: <span class="data">' . $account->mobilephone . '</span>'; }
-		if($account->workphone){ $phoneVal[] = '<span class="title">Work</span>: <span class="data">' . $account->workphone . '</span>'; }
-		if($account->fax_number){ $phoneVal[] = '<span class="title">Fax</span>: <span class="data">' . $account->fax_number . '</span>'; }
-		foreach($phoneVal as $key => $val){
-			$extra_class = ($key == 0) ? " first" : "";
-			$phoneVal[$key] = '<span class="phone-item'.$extra_class.'">'. $val . '</span>';
-		}
-		$phoneVal = implode($phoneVal);
-		$mem_info[]  = array('#title' => t("Phones"), '#value' => $phoneVal, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin'));
+		if($account->homephone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->homephone, '#content_attributes' => array('class' => 'bold')); }
+		if($account->mobilephone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->mobilephone, '#content_attributes' => array('class' => 'bold')); }
+		if($account->workphone){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->workphone, '#content_attributes' => array('class' => 'bold')); }
+		if($account->fax_number){ $phoneVal[] = array('#title' => 'Home' , '#content' => $account->fax_number, '#content_attributes' => array('class' => 'bold')); }
+		$mem_info[]  = array('#title' => t("Phones"), '#value' => $phoneVal, '#type' => "user_profile_inline_list", '#attributes' => array('class' => 'no-margin inline'));
 	}
 	
 	if ($account->notcurrentlyavailable){
@@ -985,21 +977,18 @@ function wsuser_view($account) {
 		$mem_info[]  = ($account->languagesspoken) ? array('#title' => t("Languages Spoken"), '#value' => $account->languagesspoken, '#type' => "user_profile_item",'#attributes' => array('class' => 'inline no-margin')) : "";
 	}
 
+	//change form
+	$fieldlist = wsuser_fieldlist();
 	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
-	 	if ($account->$item) {
-		   	$extra_class = (empty($services2)) ? " first" :"";
-			$services2[$item] = '<span class="phone-item'.$extra_class.'">'. $fieldlist[$item]['title'] . '</span>';
-	   	}
+	 	if ($account->$item) $services[] = array('#content' => $fieldlist[$item]['title']);
 	}
-	$services2 = implode($services2);
 	
 	if (!$account->notcurrentlyavailable) {
-	  	if ($services2) {
-			$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => $services2, '#type' => "user_profile_item",'#attributes' => array('class' => 'no-margin inline'));
+	  	if ($services) {
+			$mem_info[]  = array('#title' => t("Services this host may offer"), '#value' => $services, '#type' => "user_profile_inline_list",'#attributes' => array('class' => 'no-margin inline'));
 	  	}
 	}
 	
-	$account->content['intro'] = $intro;
 	$account->content['member_information'] = $mem_info;
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
@@ -1012,7 +1001,8 @@ function wsuser_view($account) {
 }
 
 function wsuser_profile_alter($a){
-	unset($a->content['user_picture']);//we're already using it where we want it
+	array_unshift($a->content['intro'], $a->content['user_picture']); //we put the drupal produced picture at the beginning of intro
+	unset($a->content['user_picture']); //unset so we don't get two
 	$a->content['intro']['#weight'] =  -20;
 	$a->content['mapHTML']['#weight'] =  -10;
 	$a->content['history']['#weight'] =  0;
@@ -1682,11 +1672,41 @@ function wsuser_send_email_action($object, $context) {
   }
 }
 
-function theme_user_profile_mem_vals($array){ 
-	foreach($array['#value'] as $key => $value){
-		$array['#value'][$key] = "<dd>" . check_plain($value) . "</dd>";
+function theme_user_profile_mem_vals($personalInfo){ 
+	foreach($personalInfo['#value'] as $key => $value){
+		
+		$attributes = (isset($value['#attributes'])) ? drupal_attributes($value['#attributes']) : "";
+		if(isset($value['theme'])){
+			$value['#content'] = theme($value['theme'], $value['#content']);
+		}else{
+			$value['#content'] = check_plain($value['#content']);
+		}
+		
+		$value['#content'] = (isset($value['#title'])) ? $value['#title'] . ": " . $value['#content'] : $value['#content'];
+		
+		$personalInfo['#value'][$key] = "<dd$attributes>" . $value['#content'] . "</dd>";
 	}
-	$array['#type'] = 'user_profile_item';
-	$array['#value'] = implode($array['#value']);
-	return theme('user_profile_item', $array);
+	$personalInfo['#type'] = 'user_profile_item';
+	$personalInfo['#value'] = implode($personalInfo['#value']);
+	return theme('user_profile_item', $personalInfo);
 }
+
+function theme_user_profile_inline_list($list){
+	foreach($list['#value'] as $key => $value){
+		$extra_class = ($key == 0) ? " first" : "";
+		$value['#title_attributes']['class'] .= ' title'; 
+		$title_attributes = drupal_attributes($value['#title_attributes']);
+		$value['#content_attributes']['class'] .= " content";
+		$content_attributes = drupal_attributes($value['#content_attributes']);
+		$list['#value'][$key] = '<span class="inline-list-item'.$extra_class.'">';
+		$list['#value'][$key] .= (isset($value['#title'])) ? "<span$title_attributes>". $value['#title'] . ':</span>' : "";
+		$list['#value'][$key] .= "<span$content_attributes>" .$value['#content'] . '</span></span>';
+	}
+	
+	$list['#type'] = 'user_profile_item';
+	$list['#value'] = implode($list['#value']);
+	return theme('user_profile_item', $list);
+
+}
+	
+
