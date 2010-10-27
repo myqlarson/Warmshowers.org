@@ -1624,10 +1624,20 @@ function wsuser_send_email_action($object, $context) {
  *
  * @return unknown_type
  */
+
+function wsuser_theme_registry_alter($reg){
+	$path = drupal_get_path("module", 'wsuser');
+	foreach(array('user_profile', 'user_profile_category', 'user_profile_item') as $hook){
+		$reg[$hook]['template'] = $path . '/templates/' . str_replace("_", "-", $hook);
+		$reg[$hook]['file'] = "";
+		$reg[$hook]['theme paths'][] = $reg[$hook]['theme path'] = $path;
+		$reg[$hook]['include files'] = array();
+	}
+}
+
 function wsuser_theme() {
 	$path = drupal_get_path("module", 'wsuser');
-  return array(
- 
+  return array( 
   'email_addr' =>
       array('arguments' => array('email' => NULL) ),
   'email_link' =>
@@ -1636,12 +1646,6 @@ function wsuser_theme() {
       array('arguments' => array('data' => NULL)),
   'user_profile_inline_list' =>
       array('arguments' => array('data' => NULL)),
-  'user_profile' =>
-      array('arguments' => array('account' => NULL),  'template' => "templates/user-profile"),
-   'user_profile_category' =>
-      array('arguments' => array('element' => NULL), 'template' => "templates/user-profile-category"),
-   'user_profile_item' =>
-      array('arguments' => array('element' => NULL), 'template' => "templates/user-profile-item")
       );
 }
 
