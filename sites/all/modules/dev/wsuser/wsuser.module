@@ -760,7 +760,7 @@ function wsuser_save(&$edit, &$user, $category) {
 
 
 function wsuser_view($account) {
-
+	global $user;
 	$countryname = $countrylist[$account->country];
 	$province = $provincemap[$account->province];
 
@@ -811,8 +811,13 @@ function wsuser_view($account) {
 
 
 	$fieldlist = wsuser_form();
+	$fieldlist = array_shift($fieldlist); //knock off the top so we're just working directly with categories
 	foreach (explode(" ", "bed food laundry lawnspace sag shower storage kitchenuse") as $item) {
-	 	if ($account->$item) $services[] = array('#content' => $fieldlist['wsuser'][$item]['#title']);
+	 	if ($account->$item){
+	 		foreach($fieldlist as $category => $categoryList){
+	 			if(isset($categoryList[$item])) $services[] = array('#content' => $categoryList[$item]['#title']);
+	 		}
+	 	} 
 	}
 	
 	if (!$account->notcurrentlyavailable) {
@@ -825,11 +830,20 @@ function wsuser_view($account) {
 	
 	//HISTORY CATEGORY ON  USER PROFILE  --- we hook in and add Last login time
 	$account->content['summary']['last_login'] = array('#type' => 'user_profile_item',  '#title' => "Last login was",
-  	'#value' => format_interval(time() - $account->login) . " " . t("ago"), '#dl_attributes' => array('class' => 'last'));
+  	'#value' => format_interval(time() - $account->login) . " " . t("ago"), '#dl_attributes' => array('class' => 'last'), '#weight' => 10);
 	
-	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('id' => 'profile-view'));
+	$account->content['views']  = array('#title' =>  t('Members I Recommend and Who Recommend Me'),  '#type' => "user_profile_category",'#attributes' => array('id' => 'profile-view'), '#sorted' => TRUE);
 	$account->content['views'][]  = array('#type' => "user_profile_item",'#value' => views_embed_view('user_referrals_by_referrer', 'default', $account->uid) . views_embed_view('user_referrals_by_referee', 'default', $account->uid),'#attributes' => array('class' => 'no-margin inline'));
 	
+	// If the viewing user is not this user, offer to do a recommendation
+	if ($user->uid != $account->uid) {
+		$account->content['views'][]  = array(
+		'#type' => "user_profile_item",
+		'#value' => t("Do you recommend this member?") . " " . l(t("Click here to add a recommendation"),
+		'node/add/trust-referral',array('query' => 'edit[field_member_i_trust][0][uid][uid]='. $account->name)),
+		'#attributes' => array('class' => 'last'));
+	}
+
 }
 
 
