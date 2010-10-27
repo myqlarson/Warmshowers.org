@@ -501,10 +501,11 @@ function _user_location_form($edit, $user) {
     $edit = $_POST;
   }
 
-  $fields['location'] = array(
+  $fields['wsuser']['hosting']['location'] = array(
 	'#type' => 'fieldset',
-	'#title' => t("Location Information"),
+	'#title' => t("Hosting Location"),
 	'#attributes' => array('autocomplete' => 'off'),
+  	'#description' => t('Please enter the location of where you call home.  Although you may not be there right now, this is the location where you intend on hosting cycling guests.')
   );
 
   $defaults = _user_location_form_defaults($edit, $user);
@@ -521,7 +522,7 @@ function _user_location_form($edit, $user) {
 
   $fieldlist = _user_location_fieldlist();
 
-  $fields['location']['noscript_warning'] = array(
+  $fields['wsuser']['hosting']['location']['noscript_warning'] = array(
 		'#type' => 'markup',
 		'#value' => t('<noscript><b><i>You do not seem to have Javascript enabled</b></i>, so you\'re going to have some
 					trouble with this part of the form. You\'ll just have to enter "Not listed" for the province.
@@ -534,30 +535,30 @@ function _user_location_form($edit, $user) {
       $arr["#$tag"] = $val;
     }
 
-    $fields['location'][$field] = $arr;
+    $fields['wsuser']['hosting']['location'][$field] = $arr;
     if ($defaults[$field]) {
-      $fields['location'][$field]['#default_value'] = $defaults[$field];
+      $fields['wsuser']['hosting']['location'][$field]['#default_value'] = $defaults[$field];
     }
   }
 
 
-  $fields['location']['country']['#options'] = $countrylist;
-  $fields['location']['province']['#options'] = $provlist;
-  $fields['location']['source']['#options'] = $sourceoptions;  // TODO: Wrong - remove
+  $fields['wsuser']['hosting']['location']['country']['#options'] = $countrylist;
+  $fields['wsuser']['hosting']['location']['province']['#options'] = $provlist;
+  $fields['wsuser']['hosting']['location']['source']['#options'] = $sourceoptions;  // TODO: Wrong - remove
 
 
-  $fields['location']['country']['#ahah'] = array(
+  $fields['wsuser']['hosting']['location']['country']['#ahah'] = array(
       		'path' => 'ahah_get_provinces_profile',
 			'event' => 'change',
       		'wrapper' => 'province_target',
       		'method' => 'replace',
       		'effect' => 'fade');
 
-  $fields['location']['province']['#prefix'] = '<div id="province_target">';
-  $fields['location']['province']['#suffix'] = '</div>';
-  //$fields['location']['province']['#value'] = ' ';
+  $fields['wsuser']['hosting']['location']['province']['#prefix'] = '<div id="province_target">';
+  $fields['wsuser']['hosting']['location']['province']['#suffix'] = '</div>';
+  //$fields['wsuser']['hosting']['location']['province']['#value'] = ' ';
 
-  $fields['location']['province']['#description'] = t("<noscript><b>You don't have javascript turned on in your browser</b>, so the provinces may not be listed correctly. If so, please choose 'Not listed' and put the correct postal code.</noscript>");
+  $fields['wsuser']['hosting']['location']['province']['#description'] = t("<noscript><b>You don't have javascript turned on in your browser</b>, so the provinces may not be listed correctly. If so, please choose 'Not listed' and put the correct postal code.</noscript>");
 
 
   return $fields;

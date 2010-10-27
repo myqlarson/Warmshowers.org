@@ -860,8 +860,8 @@ function wsuser_view_item($item, $description) {
 function wsuser_form($edit, $account, $category) {
 
 	$form['wsuser']['personal'] = array(
-         '#type' => 'fieldset',
-         '#title' => 'Personal Information',
+		 '#type' => 'fieldset',
+         '#title' => t('Personal Information'),
          	'fullname' => array(
 				'#default_value' => isset($edit['fullname']) ? $edit['fullname'] : '',
 	            '#type' => 'textfield',
@@ -915,9 +915,10 @@ function wsuser_form($edit, $account, $category) {
                 '#type' => 'textfield',
                 '#title' => 'Please let us know how you heard about WarmShowers.org'),
 		);
-	$form['wsuser']['hosting']=	array(		 
+	$form['wsuser']['hosting'] = array('#type' => 'fieldset','#title' => t('Hosting Information'));
+	$form['wsuser']['hosting']['preferences']=	array(		 
 		 '#type' => 'fieldset',
-         '#title' => 'Hosting Information',
+         '#title' => 'Hosting Preferences',
 	
 			'notcurrentlyavailable' => array(
 				'#default_value' => isset($edit['notcurrentlyavailable']) ? $edit['notcurrentlyavailable'] : '',
