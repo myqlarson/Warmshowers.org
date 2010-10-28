@@ -1,0 +1,135 @@
+<?php
+// $Id: wsuser.module 545 2009-09-20 00:15:26Z rfay $
+/**
+ * @file
+ * Controls the multi-step registration setup
+ */
+
+/**
+ * Implementation of hook_menu().
+ * TODO: Add special permissions for full download
+ */
+function ms_form_menu() {
+	global $user;
+	$items = array();
+		
+		
+		$items['ms-form'] = array(
+			'title' => 'MS Form',
+			'page callback' => 'ms_form',
+			'page arguments' => array(1),
+			'type' => MENU_CALLBACK,
+			'access callback' => 'user_register_access',
+			'weight' => 9
+		);
+
+	return $items;
+}
+
+function ms_form($step) {
+  // Include CTools form wizard code and CTools object cache. 
+  ctools_include('wizard');
+  ctools_include('object-cache');
+ 
+  // Wizard configuration. A complete set of parameters is best viewed in 
+  // documentation. 
+  $form_info = array(
+  // Wizard’s identifier. 
+    'id' => 'user_reg',
+    // Path to the pages of the wizard (the current step is a variable 
+    // argument). Should be the same as the path defined in hook_menu(). 
+        'path' => "ms-form/%step",
+    // To show or not to show the progress
+    'show trail' => TRUE,
+    // Manage the visibility of additional navigation buttons. 
+    'show back' => FALSE,
+    'show cancel' => FALSE,
+    'show return' => FALSE,
+    // Button texts
+    'next text' => t('Next'),
+    // Special functions prompted by the wizard 
+    // - when navigating the to the next step 
+    'next callback' =>  'ms_form_wizard_next',
+    // - at the completion of the final step 
+    'finish callback' => 'ms_form_wizard_finish',
+    // Array that describes the identifiers and the names of steps 
+    // and their order. 
+    'Order' => array ( 
+    'order' => array(
+      '1' => t('Welcome'),
+      '2' => t('Profile'),
+      '3' => t('Finish'),
+    )),
+ 
+    // Array, where the parameters are set for each form (the form of each step) 
+    // The form_id sets the form identifier, which is 
+    // also the name of the form building function. 
+    // The specified form_id are also used to determine the function name 
+    // for the current step: 
+    // - the function $form_id . '_validate' is used for validation, 
+    // - $form_id . '_submit' is used for submission. 
+    // Here you can define additional parameters, such as 
+    // include files that contain the code for each step (for the full list 
+    // of parameters, see documentation). 
+    'forms' => array(
+      '1' => array(
+        'form id' => 'mymodule_step1',
+      ),
+      '2' => array(
+        'form id' => 'mymodule_step2',
+      ),
+      '3' => array(
+        'form id' => 'mymodule_step3',
+      ),
+    ),
+  );
+ 
+  // An example of working with cache: this is where the transfer of
+  // information between the steps is carried out. Earl Miles recommends
+  // writing wrapper functions around CTools cache objects - 
+  // mymodule_cache_get() and mymodule_cache_set() functions.
+  // In this example it’s assumed that we store data transferred 
+  // between the steps within the $signup object. 
+    $signup = wsuser_multi_step_cache_get();
+  if (!$signup) {
+    // Set step = 1 - we have no data from the cache. 
+    $step = current(array_keys($form_info['order']));
+    $signup = new stdClass();
+    wsuser_cache_set($signup);
+  }
+  // This way the data from the cache are available within each step within 
+  // $form_state array. 
+  $form_state['signup_object'] = $signup;
+ 
+  // Generate the form output for the current step. 
+$output = ctools_wizard_multistep_form($form_info, $step, $form_state);
+ 
+  return $output;
+}
+
+function wsuser_multi_step_cache_get($name = NULL) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_get('delegator_page', $name);
+  if (!$cache) {
+    $cache = delegator_page_load($name);
+    $cache->locked = ctools_object_cache_test('delegator_page', $name);
+  }
+
+  return $cache;
+}
+
+/**
+ * Store changes to a task handler in the object cache.
+ */
+function wsuser_multi_step_cache_set($name, $page) {
+  ctools_include('object-cache');
+  $cache = ctools_object_cache_set('delegator_page', $name, $page);
+}
+
+/**
+ * Remove an item from the object cache.
+ */
+function wsuser_multi_step_cache_clear($name) {
+  ctools_include('object-cache');
+  ctools_object_cache_clear('delegator_page', $name);
+}
