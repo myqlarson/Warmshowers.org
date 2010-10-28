@@ -19,10 +19,17 @@ function ms_form_menu() {
 			'page callback' => 'ms_form',
 			'page arguments' => array(1),
 			'type' => MENU_CALLBACK,
-			'access callback' => 'user_register_access',
-			'weight' => 9
+			'access callback' => TRUE,// Switch back when module is ready'user_register_access',
 		);
 
+		$items['yall-are-welcome'] = array(
+			'title' => 'Y\'all are indeed quite welcome',
+			'page callback' => 'finish_stub',
+			'type' => MENU_CALLBACK,
+			'access callback' => TRUE,// Switch back when module is ready'user_register_access',
+		);
+		
+		
 	return $items;
 }
 
@@ -42,24 +49,25 @@ function ms_form($step) {
     // To show or not to show the progress
     'show trail' => TRUE,
     // Manage the visibility of additional navigation buttons. 
-    'show back' => FALSE,
-    'show cancel' => FALSE,
-    'show return' => FALSE,
+    'show back' => TRUE,
+    'show cancel' => TRUE,
+    'show return' => TRUE,
     // Button texts
     'next text' => t('Next'),
     // Special functions prompted by the wizard 
     // - when navigating the to the next step 
     'next callback' =>  'ms_form_wizard_next',
     // - at the completion of the final step 
-    'finish callback' => 'ms_form_wizard_finish',
+    'finish callback' => 'ms_form_finish',
     // Array that describes the identifiers and the names of steps 
     // and their order. 
-    'Order' => array ( 
+   
     'order' => array(
-      '1' => t('Welcome'),
-      '2' => t('Profile'),
-      '3' => t('Finish'),
-    )),
+  	  '1' => t('Welcome'),
+      '2' => t('Account'),
+      '3' => t('Peronal Info'),
+      '4' => t('Hosting Info'),
+    ),
  
     // Array, where the parameters are set for each form (the form of each step) 
     // The form_id sets the form identifier, which is 
@@ -73,13 +81,16 @@ function ms_form($step) {
     // of parameters, see documentation). 
     'forms' => array(
       '1' => array(
-        'form id' => 'mymodule_step1',
+        'form id' => 'ms_form_welcome',
       ),
       '2' => array(
-        'form id' => 'mymodule_step2',
+        'form id' => 'ms_form_account',
       ),
       '3' => array(
-        'form id' => 'mymodule_step3',
+        'form id' => 'ms_form_personal',
+      ),
+      '4' => array(
+        'form id' => 'ms_form_hosting',
       ),
     ),
   );
@@ -109,10 +120,10 @@ $output = ctools_wizard_multistep_form($form_info, $step, $form_state);
 
 function wsuser_multi_step_cache_get($name = NULL) {
   ctools_include('object-cache');
-  $cache = ctools_object_cache_get('delegator_page', $name);
+  $cache = ctools_object_cache_get('ms_form', $name);
   if (!$cache) {
-    $cache = delegator_page_load($name);
-    $cache->locked = ctools_object_cache_test('delegator_page', $name);
+    //$cache = delegator_page_load($name);
+    $cache->locked = ctools_object_cache_test('ms_form', $name);
   }
 
   return $cache;
@@ -123,7 +134,7 @@ function wsuser_multi_step_cache_get($name = NULL) {
  */
 function wsuser_multi_step_cache_set($name, $page) {
   ctools_include('object-cache');
-  $cache = ctools_object_cache_set('delegator_page', $name, $page);
+  $cache = ctools_object_cache_set('ms_form', $name, $page);
 }
 
 /**
@@ -131,5 +142,40 @@ function wsuser_multi_step_cache_set($name, $page) {
  */
 function wsuser_multi_step_cache_clear($name) {
   ctools_include('object-cache');
-  ctools_object_cache_clear('delegator_page', $name);
+  ctools_object_cache_clear('ms_form', $name);
+}
+
+function ms_form_welcome(&$form, &$form_state){
+	$form['welcome'] = array('#type' => 'markup', '#value' => variable_get('user_registration_help'));
+}
+
+function ms_form_account(&$form, $form_state){
+	$form2 = user_edit_form();
+	$form['account'] = $form2['account'];
+	$form['picture'] = $form2['picture'];
+	
+	//$wombat = &$form_state['wombat_obj'];
+	//$form_state['no buttons'] = TRUE;  
+}
+
+function ms_form_personal(&$form, &$form_state){
+	$form2 = wsuser_form();
+	$form['personal'] = $form2['wsuser']['personal'];
+}
+function ms_form_hosting(&$form, &$form_state){
+	$form2 = wsuser_form();
+	$form3 = _user_location_form();
+	//$form3 = drupal_get_form('user_register');
+	$form['hosting']['preferences'] = $form2['wsuser']['hosting']['preferences'];
+	$form['hosting']['location'] =  $form3['wsuser']['hosting']['location'];
+}
+
+function ms_form_finish(&$form_state){
+		drupal_set_message(t('THANK YOU FOR FINISHING THE FORM. IT\'S NOT DOING ANYTHING NOW, BUT IT WILL'));
+	
+	$form_state['redirect'] = 'yall-are-welcome';
+}
+
+function finish_stub(){
+	return "You're welcome for allowing you to sign up for the site.  Now leave Kevin alone and go ride your bike.";
 }
