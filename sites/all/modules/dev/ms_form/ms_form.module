@@ -65,7 +65,7 @@ function ms_form($step) {
     'order' => array(
   	  '1' => t('Welcome'),
       '2' => t('Account'),
-      '3' => t('Peronal Info'),
+      '3' => t('Personal Info'),
       '4' => t('Hosting Info'),
     ),
  
