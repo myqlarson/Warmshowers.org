@@ -42,21 +42,21 @@ function ms_form($step) {
   // documentation. 
   $form_info = array(
   // Wizard’s identifier. 
-    'id' => 'user_reg',
+    'id' => 'regObj',
     // Path to the pages of the wizard (the current step is a variable 
     // argument). Should be the same as the path defined in hook_menu(). 
-        'path' => "ms-form/%step",
+    'path' => "ms-form/%step",
     // To show or not to show the progress
     'show trail' => TRUE,
     // Manage the visibility of additional navigation buttons. 
     'show back' => TRUE,
     'show cancel' => TRUE,
-    'show return' => TRUE,
+    'show return' => FALSE,
     // Button texts
     'next text' => t('Next'),
     // Special functions prompted by the wizard 
     // - when navigating the to the next step 
-    'next callback' =>  'ms_form_wizard_next',
+    'next callback' =>  'ms_form_reg_next',
     // - at the completion of the final step 
     'finish callback' => 'ms_form_finish',
     // Array that describes the identifiers and the names of steps 
@@ -101,16 +101,16 @@ function ms_form($step) {
   // mymodule_cache_get() and mymodule_cache_set() functions.
   // In this example it’s assumed that we store data transferred 
   // between the steps within the $signup object. 
-    $signup = wsuser_multi_step_cache_get();
-  if (!$signup) {
+  $regObj = wsuser_multi_step_cache_get();
+  if (!$regObj) {
     // Set step = 1 - we have no data from the cache. 
-    $step = current(array_keys($form_info['order']));
-    $signup = new stdClass();
-    wsuser_cache_set($signup);
+    //$step = current(array_keys($form_info['order']));
+    $regObj = new stdClass();
+    wsuser_multi_step_cache_set("regObj",$regObj);
   }
   // This way the data from the cache are available within each step within 
   // $form_state array. 
-  $form_state['signup_object'] = $signup;
+  $form_state['regObj'] = $regObj;
  
   // Generate the form output for the current step. 
 $output = ctools_wizard_multistep_form($form_info, $step, $form_state);
@@ -118,12 +118,12 @@ $output = ctools_wizard_multistep_form($form_info, $step, $form_state);
   return $output;
 }
 
-function wsuser_multi_step_cache_get($name = NULL) {
+function wsuser_multi_step_cache_get() {
   ctools_include('object-cache');
-  $cache = ctools_object_cache_get('ms_form', $name);
+  $cache = ctools_object_cache_get('regObj', 'regObj');
   if (!$cache) {
     //$cache = delegator_page_load($name);
-    $cache->locked = ctools_object_cache_test('ms_form', $name);
+  //  $cache->locked = ctools_object_cache_test('ms_form', $name);
   }
 
   return $cache;
@@ -134,7 +134,7 @@ function wsuser_multi_step_cache_get($name = NULL) {
  */
 function wsuser_multi_step_cache_set($name, $page) {
   ctools_include('object-cache');
-  $cache = ctools_object_cache_set('ms_form', $name, $page);
+  $cache = ctools_object_cache_set('regObj', $name, $page);
 }
 
 /**
@@ -158,6 +158,15 @@ function ms_form_account(&$form, $form_state){
 	//$form_state['no buttons'] = TRUE;  
 }
 
+function ms_form_account_submit(&$form, $form_state){
+	$submitted = $form_state['values'];
+ 	$dont_save_keys = array('previous','op','next','cancel', 'form_build_id', 'form_token', 'form_id'); //not sure about picture... it was blank in testing
+ 	$values // YOU ARE HERE... SETUP ARRAY PROPERLy
+ 	foreach($save_values as $value) {
+   		$form_state['regObj']->$value = $submitted[$value];
+ 	}
+}
+
 function ms_form_personal(&$form, &$form_state){
 	$form2 = wsuser_form();
 	$form['personal'] = $form2['wsuser']['personal'];
@@ -178,4 +187,10 @@ function ms_form_finish(&$form_state){
 
 function finish_stub(){
 	return "You're welcome for allowing you to sign up for the site.  Now leave Kevin alone and go ride your bike.";
+}
+
+function ms_form_reg_next(&$form_state) {
+	$regObj = &$form_state['regObj'];
+  	// set wombat in cache... pretty simple
+ 	$cache = ctools_object_cache_set('regObj', 'regObj', $regObj);
 }
