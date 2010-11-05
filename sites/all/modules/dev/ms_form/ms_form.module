@@ -7,29 +7,27 @@
 
 /**
  * Implementation of hook_menu().
- * TODO: Add special permissions for full download
  */
+
 function ms_form_menu() {
 	global $user;
 	$items = array();
 		
-		
-		$items['ms-form'] = array(
-			'title' => 'MS Form',
-			'page callback' => 'ms_form',
-			'page arguments' => array(1),
-			'type' => MENU_CALLBACK,
-			'access callback' => TRUE,// Switch back when module is ready'user_register_access',
-		);
+	$items['ms-form'] = array(
+		'title' => 'MS Form',
+		'page callback' => 'ms_form',
+		'page arguments' => array(1),
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,// Switch back when module is ready'user_register_access',
+	);
 
-		$items['yall-are-welcome'] = array(
-			'title' => 'Y\'all are indeed quite welcome',
-			'page callback' => 'finish_stub',
-			'type' => MENU_CALLBACK,
-			'access callback' => TRUE,// Switch back when module is ready'user_register_access',
-		);
-		
-		
+	$items['yall-are-welcome'] = array(
+		'title' => 'Y\'all are indeed quite welcome',
+		'page callback' => 'finish_stub',
+		'type' => MENU_CALLBACK,
+		'access callback' => TRUE,// Switch back when module is ready'user_register_access',
+	);
+			
 	return $items;
 }
 
@@ -103,8 +101,6 @@ function ms_form($step) {
   // between the steps within the $signup object. 
   $regObj = wsuser_multi_step_cache_get();
   if (!$regObj) {
-    // Set step = 1 - we have no data from the cache. 
-    //$step = current(array_keys($form_info['order']));
     $regObj = new stdClass();
     wsuser_multi_step_cache_set("regObj",$regObj);
   }
@@ -121,11 +117,6 @@ $output = ctools_wizard_multistep_form($form_info, $step, $form_state);
 function wsuser_multi_step_cache_get() {
   ctools_include('object-cache');
   $cache = ctools_object_cache_get('regObj', 'regObj');
-  if (!$cache) {
-    //$cache = delegator_page_load($name);
-  //  $cache->locked = ctools_object_cache_test('ms_form', $name);
-  }
-
   return $cache;
 }
 
@@ -139,38 +130,57 @@ function wsuser_multi_step_cache_set($name, $page) {
 
 /**
  * Remove an item from the object cache.
+ * Needed at end of form to release db
+ * TODO test whether this is working or not
  */
 function wsuser_multi_step_cache_clear($name) {
   ctools_include('object-cache');
-  ctools_object_cache_clear('ms_form', $name);
+  ctools_object_cache_clear('regObj', $name);
 }
 
+/*
+ * Step 1 form
+ */
 function ms_form_welcome(&$form, &$form_state){
 	$form['welcome'] = array('#type' => 'markup', '#value' => variable_get('user_registration_help'));
 }
 
+/*
+ * Step 2 form
+ */
 function ms_form_account(&$form, $form_state){
-	$form2 = user_edit_form();
+	//$form2 = user_edit_form();
+	$form2 = drupal_retrieve_form('user_register');  //we should probably do this throughout since it gets cached and just pick what we need
+	$empty = array();
+	drupal_prepare_form('user_register', $form2, $empty);	
 	$form['account'] = $form2['account'];
-	$form['picture'] = $form2['picture'];
-	
-	//$wombat = &$form_state['wombat_obj'];
-	//$form_state['no buttons'] = TRUE;  
 }
 
+/*
+ * Step 2 submit
+ */
 function ms_form_account_submit(&$form, $form_state){
-	$submitted = $form_state['values'];
- 	$dont_save_keys = array('previous','op','next','cancel', 'form_build_id', 'form_token', 'form_id'); //not sure about picture... it was blank in testing
- 	$values // YOU ARE HERE... SETUP ARRAY PROPERLy
- 	foreach($save_values as $value) {
-   		$form_state['regObj']->$value = $submitted[$value];
- 	}
+	ms_form_submit(&$form, $form_state);
 }
 
+/*
+ * Step 3 form
+ */
 function ms_form_personal(&$form, &$form_state){
 	$form2 = wsuser_form();
 	$form['personal'] = $form2['wsuser']['personal'];
 }
+
+/*
+ * Step 3 submit
+ */
+function ms_form_personal_submit(&$form, $form_state){
+	ms_form_submit(&$form, $form_state);
+}
+
+/* 
+ * Step 4 form
+ */
 function ms_form_hosting(&$form, &$form_state){
 	$form2 = wsuser_form();
 	$form3 = _user_location_form();
@@ -179,18 +189,42 @@ function ms_form_hosting(&$form, &$form_state){
 	$form['hosting']['location'] =  $form3['wsuser']['hosting']['location'];
 }
 
+/*
+ * Step 4 submit... then it goes to finish
+ */
+function ms_form_hosting_submit(&$form, $form_state){
+	ms_form_submit(&$form, $form_state);
+}
+
+/* 
+ * This is the final function when the form reaches submission
+ * We turn the cached object we've been saving all along into an array so we can pass it in
+ * to logintoboggan as if it were a regular registration
+ * Then clear the cache of the form object
+ */
 function ms_form_finish(&$form_state){
-		drupal_set_message(t('THANK YOU FOR FINISHING THE FORM. IT\'S NOT DOING ANYTHING NOW, BUT IT WILL'));
-	
-	$form_state['redirect'] = 'yall-are-welcome';
+	$regArr['values'] = (array)$form_state['regObj'];
+	logintoboggan_user_register_submit(array(), $regArr); 
+	wsuser_multi_step_cache_clear('regObj');
 }
 
-function finish_stub(){
-	return "You're welcome for allowing you to sign up for the site.  Now leave Kevin alone and go ride your bike.";
-}
-
+/*
+ * Responsible for passing the object through each step
+ */
 function ms_form_reg_next(&$form_state) {
 	$regObj = &$form_state['regObj'];
-  	// set wombat in cache... pretty simple
  	$cache = ctools_object_cache_set('regObj', 'regObj', $regObj);
+}
+
+/*
+ * This function is responsible for saving the fields into the registration object that gets cached
+ * each round.  All 3 submit functions above funnel through this
+ */
+function ms_form_submit(&$form, $form_state){
+ 	$dont_save_keys = array('previous','op','next','cancel', 'form_build_id', 'form_token', 'form_id'); //not sure about picture... it was blank in testing
+ 	foreach($form_state['values'] as $key => $value) {
+ 		if(!in_array($key,$dont_save_keys)){
+ 			$form_state['regObj']->$key = $value;
+ 		}
+ 	}
 }
