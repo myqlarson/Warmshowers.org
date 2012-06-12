@@ -18,8 +18,10 @@ function warmshowers_site_update_6001() {
  * the mail before it gets turned into html mail.
  * If htmlmail is not already enabled, this will have to be done
  * manually.
+ *
+ * Apparently htmlmail reset its weight to 1 somewhere along the way, so trying again.
  */
-function warmshowers_site_update_6002() {
+function warmshowers_site_update_6003() {
   $ret = array();
   $ret[] = update_sql("UPDATE {system} SET weight = 30 WHERE name = 'htmlmail'");
   return $ret;
