@@ -106,18 +106,27 @@
  *
  * =========================================================== End instructions.
  */
-  $template_name = basename(__FILE__);
-  $current_path = realpath(NULL);
-  $current_len = strlen($current_path);
-  $template_path = realpath(dirname(__FILE__));
-  if (!strncmp($template_path, $current_path, $current_len)) {
-    $template_path = substr($template_path, $current_len + 1);
-  }
-  $template_url = url($template_path, array('absolute' => TRUE));
+global $user;
+$template_name = basename(__FILE__);
+$current_path = realpath(NULL);
+$current_len = strlen($current_path);
+$template_path = realpath(dirname(__FILE__));
+if (!strncmp($template_path, $current_path, $current_len)) {
+  $template_path = substr($template_path, $current_len + 1);
+}
+$template_url = url($template_path, array('absolute' => TRUE));
 ?>
-<div class="htmlmail-body">
-  <?php $filtered_content = check_markup($body, 6, FALSE); // Uses format 6 (email filter) to mark up text ?>
-  <?php print $filtered_content; ?>
+<div class="htmlmail-body" xmlns="http://www.w3.org/1999/html">
+<?php $filtered_content = check_markup($body, 6, FALSE); // Uses format 6 (email filter) to mark up text ?>
+<?php print $filtered_content ?>
+<?php if ($user->uid): ?>
+
+<br />---------<br />
+From logged-in member: <a href="<?php print $GLOBALS['base_root']; ?>/user/<?php print $user->uid; ?>">
+    <?php print $user->fullname?></a> (<?php print $user->name; ?>)
+  <?php endif ?>
+
+
 </div>
 <?php if ($debug):
   $module_template = str_replace('_', '-', "htmlmail-$module.tpl.php");
