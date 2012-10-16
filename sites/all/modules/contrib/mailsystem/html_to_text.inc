@@ -120,9 +120,7 @@ function mailsystem_html_to_text($string, $allowed_tags = NULL) {
   $notes = array();
   // Recursively convert the DOM tree into plain text.
   $text = _mailsystem_html_to_text($dom->documentElement, $allowed_tags, $notes);
-  // Hard-wrap at 1000 characters (including the line break sequence)
-  // and space-stuff special lines.
-  $text = mailsystem_wrap_mail($text, array('max' => 1000 - strlen($eol), 'hard' => TRUE));
+
   // Change non-breaking spaces back to regular spaces, and trim line breaks.
   // chr(160) is the non-breaking space character.
   $text = str_replace(chr(160), ' ', trim($text, $eol));
@@ -423,18 +421,6 @@ function _mailsystem_html_to_text(DOMNode $node, array $allowed_tags, array &$no
     if (!in_array($tag, array('a', 'b', 'cite', 'em', 'i', 'pre', 'strong', 'u'))) {
       $child_text = preg_replace('/ *' . $eol . ' */', $eol, $child_text);
     }
-    // Soft-wrap at effective line length, but don't space-stuff.
-    $child_text = mailsystem_wrap_mail(
-      $prefix . $child_text,
-      array(
-        // chr(160) is the non-breaking space character.
-        'break' => chr(160) . $eol,
-        'indent' => $indent,
-        'max' => $line_length,
-        'pad' => $pad,
-        'stuff' => FALSE,
-      )
-    ) . $suffix;
     if ($tag === 'pre') {
       // Perform RFC-3676 soft-wrapping.
       // chr(160) is the non-breaking space character.
