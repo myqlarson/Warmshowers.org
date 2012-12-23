@@ -1,0 +1,13 @@
+name = wsmap2
+description = "Display Warmshowers hosts on a google map (google maps api v3)"
+
+dependencies[] = user_location
+dependencies[] = wsuser
+dependencies[] = ip2cc
+dependencies[] = locationservices
+dependencies[] = browscap
+dependencies[] = libraries
+
+package = Warmshowers.org
+
+core = 6.x
