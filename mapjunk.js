@@ -8,6 +8,9 @@
 
 // TODO: Consider using anon functions instead of named where appropriate
 
+// TODO: figure out where this goes
+var infoWindow = new google.maps.InfoWindow();
+
 // TODO: Consider using LatLng instead of the independent minlat etc.
 function addHostMarkersByLocation(ne, sw, center, callbackFunction) {
   // TODO: Set the limit to something reasonable.
@@ -27,9 +30,18 @@ function addMarkersToMap(map, json) {
     var marker = new google.maps.Marker({
       position: latLng,
       map: map,
-      title: host.title
+      title: host.name + "\n" + host.city + ', ' + host.province,
+      html: host.themed_html
     });
-  }
+    google.maps.event.addListener(marker, 'click', function() {
+      // This was crazy to figure out. I kept getting the html from the last
+      // host loaded. http://you.arenot.me/2010/06/29/google-maps-api-v3-0-multiple-markers-multiple-infowindows/
+      // comment 3 finally helped me out.
+      infoWindow.setContent(this.html);
+      infoWindow.open(map, this);
+    });
+
+  };
 }
 
 function updateOnBoundsChange(map) {
@@ -45,6 +57,7 @@ function initialize() {
   // Imitate behavior of existing stuff; this has to be fixed up later.
   var defaultLocation = {latitude: 40, longitude: -105};
   var mapCenter = defaultLocation;
+
 
   var mapOptions = {
     center: new google.maps.LatLng(mapCenter.latitude, mapCenter.longitude),

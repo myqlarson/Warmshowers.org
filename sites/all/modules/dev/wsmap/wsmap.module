@@ -224,6 +224,10 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
 
   $accounts = array();
   while ($row = db_fetch_array($result)) {
+
+    // TODO: Is this too costly? It means theming an enormous number of markers
+    // of which very few will be opened. Better to do it dynamically in the js?
+    $row['themed_html'] = theme('wsmap_map_marker', $row);
     $accounts[] = $row;
   }
   return array(
@@ -237,6 +241,7 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
       'maxlon' => $maxlon,
       'limit' => $limit,
       'duration' => $duration,
+      'expanded_query' => $GLOBALS['latest_query'],
     ),
     'status' => array(
       'delivered' => "",
@@ -370,6 +375,11 @@ function wsmap_theme() {
       'path' => $template_path,
       'template' => 'wsmap-map-behaviors-block',
     ),
+    'wsmap_map_marker' => array(
+      'arguments' => array('data' => NULL),
+      'path' => $template_path,
+      'template' => 'wsmap-map-marker',
+    )
   );
 }
 
