@@ -208,7 +208,8 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
   // The subquery on users_roles prevents unvalidated users from showing up.
   $sql = "SELECT u.uid, w.fullname name, street, city, province, postal_code, country, latitude, longitude,
     source, notcurrentlyavailable,
-    DEGREES(ACOS(SIN(RADIANS(%f)) * SIN(RADIANS(latitude))+COS(RADIANS(%f)) * COS(RADIANS(latitude)) * COS(RADIANS(%f-longitude)))) * 60 AS distance
+    DEGREES(ACOS(SIN(RADIANS(%f)) * SIN(RADIANS(latitude))+COS(RADIANS(%f)) * COS(RADIANS(latitude)) * COS(RADIANS(%f-longitude)))) * 60 AS distance,
+    CONCAT(latitude, ',', longitude) AS position
     FROM {users} u, {user_location} l, {wsuser} w
     WHERE $latlonwhere
     AND u.uid = l.oid AND u.uid=w.uid AND u.status>0 AND !w.isunreachable AND !w.isstale
@@ -225,11 +226,13 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
   $accounts = array();
   while ($row = db_fetch_array($result)) {
 
-    // TODO: Is this too costly? It means theming an enormous number of markers
+    // TODO: This will be too costly... It means theming an enormous number of markers
     // of which very few will be opened. Better to do it dynamically in the js?
     $row['themed_html'] = theme('wsmap_map_marker', $row);
     $accounts[] = $row;
   }
+  usort($accounts, wsmap_position_cmp);
+
   return array(
     'status' => array(
       'delivered' => count($accounts),
@@ -249,6 +252,21 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
     ),
     'accounts' => $accounts
   );
+}
+
+/**
+ * Compare function for usort; simply compare position so that array is sorted
+ * by position.
+ *
+ * @param $a
+ * @param $b
+ * @return int
+ */
+function wsmap_position_cmp($a, $b) {
+  if ($a.position == $b.position) {
+    return 0;
+  }
+  return ($a.position < $b.position) ? -1 : 1;
 }
 
 /******* xml output for ajax request ************/

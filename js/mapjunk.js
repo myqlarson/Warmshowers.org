@@ -11,7 +11,22 @@
 // TODO: figure out where this goes
 var infoWindow = new google.maps.InfoWindow();
 var markers = {};
+var markerPositions = [];
+var markerImages = {};
 var markerCluster;
+// Imitate behavior of existing stuff; this has to be fixed up later.
+var defaultLocation = {latitude: 39.063871, longitude: -108.550649};
+var mapCenter = defaultLocation;
+
+// Grand junction area settings
+//centerlat: "39.094133419808074"
+//centerlon: "-108.56411102655035"
+//duration: 0.001223
+//limit: "2000"
+//maxlat: "39.13342480867868"
+//maxlon: "-108.31794861199955"
+//minlat: "39.054820126011755"
+//minlon: "-108.81027344110112"
 
 // TODO: Consider using LatLng instead of the independent minlat etc.
 function addHostMarkersByLocation(ne, sw, center, callbackFunction) {
@@ -26,7 +41,24 @@ function addMarkersToMap(map, json) {
 
   for (var i = 0; i < parsed.accounts.length;  i++) {
     var host = parsed.accounts[i];
-    if (markers[host.uid]) { continue; }
+    if (markers[host.uid]) {
+      continue;
+    }
+
+    if (!markerPositions[host.position]) {
+      markerPositions[host.position] = [host.uid];
+    }
+    else {
+      markerPositions[host.position].push(host.uid);
+      markers[markerPositions[host.position][0]].html += host.themed_html;
+      markerCount = markerPositions[host.position].length;
+      if (!markerImages[markerCount]) {
+        markerImages[markerCount] = new google.maps.MarkerImage('/markerIcons/largeTDBlueIcons/marker' + markerCount + '.png');
+      }
+      markers[markerPositions[host.position][0]].setIcon(markerImages[markerCount]);
+      markers[markerPositions[host.position][0]].setZIndex(500);
+    }
+
 
     var latLng = new google.maps.LatLng(host.latitude, host.longitude);
 
@@ -61,19 +93,15 @@ function updateOnBoundsChange(map) {
 }
 
 function initialize() {
-  // Imitate behavior of existing stuff; this has to be fixed up later.
-  var defaultLocation = {latitude: 40, longitude: -105};
-  var mapCenter = defaultLocation;
-
 
   var mapOptions = {
     center: new google.maps.LatLng(mapCenter.latitude, mapCenter.longitude),
-    zoom: 8,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+    zoom: 13,
+    mapTypeId: google.maps.MapTypeId.TERRAIN
   };
 
   var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-  markerCluster = new MarkerClusterer(map);
+  markerCluster = new MarkerClusterer(map, [], {maxZoom: 8 });
 
   google.maps.event.addListener(map, 'idle', function() {
     updateOnBoundsChange(map);
