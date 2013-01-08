@@ -231,6 +231,11 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
     $accounts[] = $row;
   }
   return array(
+    'status' => array(
+      'delivered' => count($accounts),
+      'totalresults' => $avail_results_count,
+      'status' => 'complete',
+    ),
     'query_data' => array(
       'sql' => $sql,
       'centerlat' => $centerlat,
@@ -241,12 +246,6 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
       'maxlon' => $maxlon,
       'limit' => $limit,
       'duration' => $duration,
-      'expanded_query' => $GLOBALS['latest_query'],
-    ),
-    'status' => array(
-      'delivered' => "",
-      'totalresults' => $avail_results_count,
-      'status' => 'complete',
     ),
     'accounts' => $accounts
   );

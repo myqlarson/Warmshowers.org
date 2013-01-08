@@ -10,20 +10,24 @@
 
 // TODO: figure out where this goes
 var infoWindow = new google.maps.InfoWindow();
+var markers = {};
+var markerCluster;
 
 // TODO: Consider using LatLng instead of the independent minlat etc.
 function addHostMarkersByLocation(ne, sw, center, callbackFunction) {
   // TODO: Set the limit to something reasonable.
   $.post('/services/rest/hosts/by_location',
-    {minlat: sw.lat(), maxlat: ne.lat(), minlon: sw.lng(), maxlon: ne.lng(), centerlat: center.lat(), centerlon: center.lng(), limit: 1000 }, callbackFunction);
+    {minlat: sw.lat(), maxlat: ne.lat(), minlon: sw.lng(), maxlon: ne.lng(), centerlat: center.lat(), centerlon: center.lng(), limit: 2000 }, callbackFunction);
 
 }
 
 function addMarkersToMap(map, json) {
   var parsed = JSON.parse(json);
-  // TODO: Do foreach-style? This seems ugly.
+
   for (var i = 0; i < parsed.accounts.length;  i++) {
     var host = parsed.accounts[i];
+    if (markers[host.uid]) { continue; }
+
     var latLng = new google.maps.LatLng(host.latitude, host.longitude);
 
     // Creating a marker and putting it on the map
@@ -40,10 +44,13 @@ function addMarkersToMap(map, json) {
       infoWindow.setContent(this.html);
       infoWindow.open(map, this);
     });
-
+    markers[host.uid] = marker;
+    markerCluster.addMarker(marker);
   };
 }
 
+
+// TODO: It would be SO nice to just get the *changed* markers.
 function updateOnBoundsChange(map) {
   var mapBounds = map.getBounds();
   var ne = mapBounds.getNorthEast();
@@ -66,9 +73,12 @@ function initialize() {
   };
 
   var map = new google.maps.Map(document.getElementById("map_canvas"), mapOptions);
-  google.maps.event.addListener(map, 'bounds_changed', function() {
+  markerCluster = new MarkerClusterer(map);
+
+  google.maps.event.addListener(map, 'idle', function() {
     updateOnBoundsChange(map);
   });
 
+  google.maps.event.addDomListener(window, 'load', initialize);
 
 }
