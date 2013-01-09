@@ -228,7 +228,8 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
 
     // TODO: This will be too costly... It means theming an enormous number of markers
     // of which very few will be opened. Better to do it dynamically in the js?
-    $row['themed_html'] = theme('wsmap_map_marker', $row);
+    //$row['themed_html'] = theme('wsmap_map_marker', $row);
+    $row['themed_html'] = '<li>' . $row['name'] . '</li>';
     $accounts[] = $row;
   }
   usort($accounts, wsmap_position_cmp);
