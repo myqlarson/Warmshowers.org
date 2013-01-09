@@ -2,7 +2,7 @@
  * @file wsmap.js
  *
  * Turns a div#wsmap_map on the page into a Google map.
- *
+ * Google Javascript Maps API v3
  */
 
 // Basic pseudoglobal variables
@@ -13,16 +13,17 @@ var markerImages = {};
 var markerCluster;
 var defaultLocation;
 
-var advcycl; // Overlay for advcycling stuff
+var adventure_cycling_overlay;
 var mapwidth; // Integer percent
 var userInfo; // If map is to center on a user, set here.
+var map;
 
 var specificZoomSettings = {  // Handle countries that don't quite fit the calculation
   us:6, ca:5, ru:3, cn:4
 };
 
 
-Drupal.behaviors.wsmap = function () {
+Drupal.behaviors.wsmap = function (context) {
 
   // Grab necessary settings into globals.
   mapdata_source = Drupal.settings.wsmap.mapdata_source;
@@ -59,26 +60,23 @@ Drupal.behaviors.wsmap = function () {
     mapTypeId:google.maps.MapTypeId.TERRAIN
   };
 
-  var map = new google.maps.Map(document.getElementById("wsmap_map"), mapOptions);
+  map = new google.maps.Map(document.getElementById("wsmap_map"), mapOptions);
   markerCluster = new MarkerClusterer(map, [], {maxZoom:8 });
 
   google.maps.event.addListener(map, 'idle', function () {
     var mapBounds = map.getBounds();
     var ne = mapBounds.getNorthEast();
     var sw = mapBounds.getSouthWest();
-    addHostMarkersByLocation(ne, sw, map.getCenter(), function (json) {
-      addMarkersToMap(map, json);
+    var center = map.getCenter();
+
+    // Note that the actual limit here is set by the Drupal variable.
+    $.post('/services/rest/hosts/by_location',
+      {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, function(json) {
+        addMarkersToMap(map, json);
     });
   });
 
   google.maps.event.addDomListener(window, 'load', Drupal.behaviors.wsmap);
-}
-
-function addHostMarkersByLocation(ne, sw, center, callbackFunction) {
-  // Note that the actual limit is set by the Drupal variable.
-  $.post('/services/rest/hosts/by_location',
-    {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, callbackFunction);
-
 }
 
 function addMarkersToMap(map, json) {
@@ -222,12 +220,20 @@ function mapStartPosition() {
 }
 
 
+/**
+ * Load the adventure cycling overlay
+ * @param kmzfile
+ */
 function loadAdvCycling(kmzfile) {
-  advcycl = new GGeoXml(kmzfile);
-  map.addOverlay(advcycl);
+  if (!adventure_cycling_overlay) {
+    adventure_cycling_overlay = new google.maps.KmlLayer(kmzfile, {preserveViewport:true});
+  }
+  adventure_cycling_overlay.setMap(map);
 }
 function unloadAdvCycling() {
-  map.removeOverlay(advcycl);
+  if (adventure_cycling_overlay) {
+    adventure_cycling_overlay.setMap(null);
+  }
 }
 
 function toggleMap() { //expand and contract map
