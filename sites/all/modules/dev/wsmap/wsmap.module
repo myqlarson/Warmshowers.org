@@ -208,7 +208,8 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
   // The subquery on users_roles prevents unvalidated users from showing up.
   $sql = "SELECT u.uid, w.fullname name, street, city, province, postal_code, country, latitude, longitude,
     source, notcurrentlyavailable,
-    DEGREES(ACOS(SIN(RADIANS(%f)) * SIN(RADIANS(latitude))+COS(RADIANS(%f)) * COS(RADIANS(latitude)) * COS(RADIANS(%f-longitude)))) * 60 AS distance
+    DEGREES(ACOS(SIN(RADIANS(%f)) * SIN(RADIANS(latitude))+COS(RADIANS(%f)) * COS(RADIANS(latitude)) * COS(RADIANS(%f-longitude)))) * 60 AS distance,
+    CONCAT(latitude, ',', longitude) AS position
     FROM {users} u, {user_location} l, {wsuser} w
     WHERE $latlonwhere
     AND u.uid = l.oid AND u.uid=w.uid AND u.status>0 AND !w.isunreachable AND !w.isstale
@@ -226,7 +227,13 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
   while ($row = db_fetch_array($result)) {
     $accounts[] = $row;
   }
+
   return array(
+    'status' => array(
+      'delivered' => count($accounts),
+      'totalresults' => $avail_results_count,
+      'status' => 'complete',
+    ),
     'query_data' => array(
       'sql' => $sql,
       'centerlat' => $centerlat,
@@ -238,16 +245,14 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
       'limit' => $limit,
       'duration' => $duration,
     ),
-    'status' => array(
-      'delivered' => "",
-      'totalresults' => $avail_results_count,
-      'status' => 'complete',
-    ),
     'accounts' => $accounts
   );
 }
 
+
 /******* xml output for ajax request ************/
+// TODO: Delete this when JSON version is deployed. Assuming that the apps
+// don't use it... Check!
 
 function wsmap_xml_hosts()
 {
@@ -370,6 +375,11 @@ function wsmap_theme() {
       'path' => $template_path,
       'template' => 'wsmap-map-behaviors-block',
     ),
+    'wsmap_map_marker' => array(
+      'arguments' => array('data' => NULL),
+      'path' => $template_path,
+      'template' => 'wsmap-map-marker',
+    )
   );
 }
 
