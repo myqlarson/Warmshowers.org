@@ -1,0 +1,21 @@
+.wsmap-infowindow-picture {
+    float: left;
+}
+.wsmap-infowindow-picture img {
+    margin: 6px;
+    border: 1px black;
+}
+.wsmap-infowindow-host {
+    clear: both;
+}
+.wsmap-infowindow {
+    /* overflow: auto; */
+}
+.wsmap-numhosts {
+    font-weight: bold;
+}
+
+.wsmap-credits {
+    font-size: xx-small;
+    text-align: right;
+}

@@ -16,4 +16,4 @@
         <div id='wsmap_map' style='width:100%; height:540px'></div>
     </div>
 </div>
-<div id="wsmap-credits"><?php print t('Geolocation courtesy of Google and Geonames.org'); ?></div>
+<div class="wsmap-credits"><?php print t('Geolocation courtesy of Google and Geonames.org'); ?></div>

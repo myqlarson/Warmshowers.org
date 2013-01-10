@@ -59,6 +59,7 @@ function wsmap_view($uid = NULL, $zoom = 0) {
   drupal_add_js($wsmap_path . '/js/wsmap.js');
   drupal_add_js($wsmap_path . '/js/wsmap_map_behaviors.js');
   drupal_add_js($wsmap_path . '/js/markerclusterer/src/markerclusterer.js');
+  drupal_add_css($wsmap_path . '/wsmap.css');
 
   $google_map_location = "https://maps.googleapis.com/maps/api/js?sensor=false&key=" . variable_get('user_location_google_key', '0');
   drupal_set_html_head("<script src='$google_map_location'  type='text/javascript'></script>");
@@ -141,7 +142,7 @@ function wsmap_get_hosts_by_location($minlat, $maxlat, $minlon, $maxlon, $center
 
   // The subquery on users_roles prevents unvalidated users from showing up.
   $sql = "SELECT u.uid, w.fullname name, street, city, province, postal_code, country, latitude, longitude,
-    source, notcurrentlyavailable,
+    source, picture, notcurrentlyavailable,
     DEGREES(ACOS(SIN(RADIANS(%f)) * SIN(RADIANS(latitude))+COS(RADIANS(%f)) * COS(RADIANS(latitude)) * COS(RADIANS(%f-longitude)))) * 60 AS distance,
     CONCAT(latitude, ',', longitude) AS position
     FROM {users} u, {user_location} l, {wsuser} w

@@ -118,15 +118,13 @@ function addMarkersToMap(map, json) {
       continue;
     }
 
-    host.themed_html = host.name;
-
-    var latLng = new google.maps.LatLng(host.latitude, host.longitude);
-
+    var position = new google.maps.LatLng(host.latitude, host.longitude);
     var marker = new google.maps.Marker({
-      position:latLng,
+      position: position,
       map:map,
-      title:host.name + "\n" + host.city + ', ' + host.province,
-      html:host.themed_html,
+      title: host.name + "\n" + host.city + ', ' + host.province,
+      host: host,
+      hostcount: 1,
       zIndex:1
     });
 
@@ -139,20 +137,17 @@ function addMarkersToMap(map, json) {
       // This one will hide under the first one (diff color, etc.)
       marker.setZIndex(0);
       markerPositions[host.position].push(host.uid);
-      markers[markerPositions[host.position][0]].html += host.themed_html;
       markerCount = markerPositions[host.position].length;
       if (!markerImages[markerCount]) {
-        markerImages[markerCount] = new google.maps.MarkerImage(base_path + '/markerIcons/largeTDBlueIcons/marker' + markerCount + '.png');
+        markerImages[markerCount] = new google.maps.MarkerImage(base_path + '/markerIcons/largeTDRedIcons/marker' + markerCount + '.png');
       }
       markers[markerPositions[host.position][0]].setIcon(markerImages[markerCount]);
       markers[markerPositions[host.position][0]].setZIndex(1);
+      markers[markerPositions[host.position][0]].hostcount++;
     }
 
     google.maps.event.addListener(marker, 'click', function () {
-      // This was crazy to figure out. I kept getting the html from the last
-      // host loaded. http://you.arenot.me/2010/06/29/google-maps-api-v3-0-multiple-markers-multiple-infowindows/
-      // comment 3 finally helped me out.
-      infoWindow.setContent(this.html);
+      infoWindow.setContent(Drupal.theme('wsmap_infoWindow', this));
       infoWindow.open(map, this);
     });
     markers[host.uid] = marker;
@@ -225,3 +220,36 @@ function toggleMap() { //expand and contract map
   setTimeout("map.checkResize();loadMarkers();", 1000); //this is necessary due to animate function
 }
 
+/**
+ * Theme function to theme the infoWindow for a single host.
+ * @param host
+ * @return {String}
+ */
+Drupal.theme.prototype.wsmap_infoWindow = function(marker) {
+  var html = '<div class="wsmap-infowindow">';
+  position=marker.host.position;
+  hostcount=marker.hostcount;
+  if (hostcount > 1) {
+    html += '<span class="wsmap-numhosts">' + Drupal.t('%numhosts hosts at this location', {'%numhosts': hostcount}) + '</span>';
+  }
+  for (var i = 0; i < hostcount; i++) {
+    var host=markers[markerPositions[position][i]].host;
+
+    if (host.picture == "") { host.picture = '/files/default_picture.jpg'; }
+
+    html += '<div class="wsmap-infowindow-host">';
+    html += '<div class="wsmap-infowindow-picture"><img src="/files/imagecache/map_infoWindow/' + host.picture + '"></div>';
+    html += '<div class="wsmap-infowindow-hostinfo">';
+    var cboxlink="/user/" + host.uid;
+    var link= '#';
+    var colorbox='$.colorbox({href: \'' + cboxlink + '\', iframe: true, width: \'90%\', height: \'90%\' });'
+
+    html += '<a onclick="' + colorbox + '" href="' + link + '">' + host.name + '</a><br/>';
+    if (host.street) { html += host.street + '<br/>'; }
+    html += host.city + ', ' + host.province + ' ' + host.postal_code + ' ' + host.country;
+    html += '</div>'; // end wsmap-infowindow-hostinfo
+    html += '</div>'; // end wsmap-infowindow-host
+  }
+  html += '</div>';  // End wsmap-infowindow
+  return html;
+}
