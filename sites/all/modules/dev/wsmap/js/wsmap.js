@@ -3,6 +3,10 @@
  *
  * Turns a div#wsmap_map on the page into a Google map.
  * Google Javascript Maps API v3
+ *
+ * Used the basic techniques as in various blogs.
+ * The MarkerClusterer is used for clustering:
+ * http://google-maps-utility-library-v3.googlecode.com/svn/trunk/markerclusterer/
  */
 
 // Basic pseudoglobal variables
@@ -12,7 +16,6 @@ var markerPositions = [];
 var markerImages = {};
 var markerCluster;
 var defaultLocation;
-var lastMapBounds;
 
 var adventure_cycling_overlay;
 var mapwidth; // Integer percent
@@ -20,12 +23,19 @@ var userInfo; // If map is to center on a user, set here.
 var map;
 var base_path; // Base path for icons, etc.
 
+// This is used to determine a one-off zoom setting for large countries.
+// Most countries work with the area calculation done in the code.
 var specificZoomSettings = {  // Handle countries that don't quite fit the calculation
-  us:6, ca:5, ru:3, cn:4
+  us:4, ca:5, ru:3, cn:4
 };
 
+// Was unable to use Drupal.behaviors here because any AHAH action re-fired
+// the behavior. Yuck.
+$(document).ready(function () {
+  wsmap_initialize();
+});
 
-Drupal.behaviors.wsmap = function (context) {
+function wsmap_initialize() {
 
   // Grab necessary settings into globals.
   mapdata_source = Drupal.settings.wsmap.mapdata_source;
@@ -70,14 +80,10 @@ Drupal.behaviors.wsmap = function (context) {
   };
 
   map = new google.maps.Map(document.getElementById("wsmap_map"), mapOptions);
-  markerCluster = new MarkerClusterer(map, [], {maxZoom:8 });
+  markerCluster = new MarkerClusterer(map, [], {maxZoom:6 });
 
   google.maps.event.addListener(map, 'idle', function () {
     mapBounds = map.getBounds();
-    if (lastMapBounds && lastMapBounds.equals(mapBounds)) {
-      return;
-    };
-    lastMapBounds = mapBounds;
     var ne = mapBounds.getNorthEast();
     var sw = mapBounds.getSouthWest();
     var center = map.getCenter();
@@ -100,7 +106,7 @@ Drupal.behaviors.wsmap = function (context) {
     });
   });
 
-  google.maps.event.addDomListener(window, 'load', Drupal.behaviors.wsmap);
+  // google.maps.event.addDomListenerOnce(window, 'load', Drupal.behaviors.wsmap);
 }
 
 function addMarkersToMap(map, json) {
