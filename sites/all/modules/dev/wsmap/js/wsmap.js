@@ -17,6 +17,7 @@ var adventure_cycling_overlay;
 var mapwidth; // Integer percent
 var userInfo; // If map is to center on a user, set here.
 var map;
+var base_path; // Base path for icons, etc.
 
 var specificZoomSettings = {  // Handle countries that don't quite fit the calculation
   us:6, ca:5, ru:3, cn:4
@@ -50,8 +51,15 @@ Drupal.behaviors.wsmap = function (context) {
   });
 
 
+  // If we're centering on a particular user, change the defaultLocation
+  // to be that user and zoom of 10.
   if (userInfo && userInfo.uid) {
-    zoomToUser(userInfo.uid, userInfo.latitude, userInfo.longitude, 10);
+    defaultLocation = {
+      latitude:userInfo.latitude,
+      longitude: userInfo.longitude,
+      zoom:10
+    };
+    // zoomToUser(userInfo.uid, userInfo.latitude, userInfo.longitude, 10);
   }
 
   var mapOptions = {
@@ -73,6 +81,17 @@ Drupal.behaviors.wsmap = function (context) {
     $.post('/services/rest/hosts/by_location',
       {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, function(json) {
         addMarkersToMap(map, json);
+
+        // If we have a user location as the center, put up an infoWindow.
+        if (userInfo) {
+          var content = userInfo.account.fullname;
+          if (userInfo.account.notcurrentlyavailable == "1") {
+            content = Drupal.t('Member is not currently available. Approximate location shown');
+          }
+          infoWindow.setContent(content);
+          infoWindow.setPosition(mapOptions.center);
+          infoWindow.open(map);
+        }
     });
   });
 
@@ -92,7 +111,6 @@ function addMarkersToMap(map, json) {
 
     var latLng = new google.maps.LatLng(host.latitude, host.longitude);
 
-    // Creating a marker and putting it on the map
     var marker = new google.maps.Marker({
       position:latLng,
       map:map,
@@ -113,7 +131,7 @@ function addMarkersToMap(map, json) {
       markers[markerPositions[host.position][0]].html += host.themed_html;
       markerCount = markerPositions[host.position].length;
       if (!markerImages[markerCount]) {
-        markerImages[markerCount] = new google.maps.MarkerImage('/markerIcons/largeTDBlueIcons/marker' + markerCount + '.png');
+        markerImages[markerCount] = new google.maps.MarkerImage(base_path + '/markerIcons/largeTDBlueIcons/marker' + markerCount + '.png');
       }
       markers[markerPositions[host.position][0]].setIcon(markerImages[markerCount]);
       markers[markerPositions[host.position][0]].setZIndex(1);
@@ -133,15 +151,20 @@ function addMarkersToMap(map, json) {
 }
 
 function setMapLocationToCountry(countryCode) {
-  getMapLocationForCountry(countryCode, zoomCallback);
-}
-
-function getMapLocationForCountry(countryCode, func_to_call) {
-
   // Ajax GET request for autocompletion
   url = '/location_country_locator_service' + '/' + countryCode;
-  $.get(url, "", func_to_call);
+  $.get(url, "", function(data) {
+    var res = Drupal.parseJson(data);
+    var area = parseFloat(res.area) / 1000;
+    var basecalc = Math.log(area) / Math.log(4);
+    var mapCountry = res.country_code;
+    var zoom = specificZoomSettings[mapCountry];
 
+    if (!zoom) {
+      zoom = Math.round(10 - basecalc);
+    }
+    zoomToSpecific(res.country, res.latitude, res.longitude, zoom);
+  });
 }
 
 
@@ -155,73 +178,13 @@ function getMapLocationForCountry(countryCode, func_to_call) {
  */
 function zoomToSpecific(placename, latitude, longitude, zoom) {
   map.setZoom(zoom);
-
-  var templistener = GEvent.addListener(map, "moveend", function () {
-    GEvent.removeListener(templistener);
-
-    var loadMarkersListener = GEvent.addListener(map, 'loadMarkersComplete', function (numLoaded) {
-      GEvent.removeListener(loadMarkersListener);
-
-      map.openInfoWindow(map.getCenter(), document.createTextNode(placename), {maxWidth:220});
-
-    });
-    loadMarkers();
-  });
-
-  map.panTo(new GLatLng(latitude, longitude));
-
-
-}
-
-
-function zoomToUser(uid, latitude, longitude, zoom) {
-  map.setZoom(zoom);
-
-  var templistener = GEvent.addListener(map, "moveend", function () {
-    GEvent.removeListener(templistener);
-
-    var loadMarkersListener = GEvent.addListener(map, "loadMarkersComplete", function (numLoaded) {
-      GEvent.removeListener(loadMarkersListener);
-      var host = hosts[uid];
-
-
-      if (!host) {
-        host = {
-          marker:new GMarker(map.getCenter(), redIcon),
-          location:map.getCenter(),
-          na:1
-        };
-        clusterer.AddMarker(host.marker, Drupal.t('Unvailable member'));
-      }
-      var txt = makePopupHtml(host);
-
-      host.marker.openInfoWindowHtml(txt, { maxWidth:220 });
-    });
-
-    loadMarkers();
-  });
-  map.panTo(new GLatLng(latitude, longitude));
-
-}
-
-
-/**
- * Set map start position based on cookie or member location (from Drupal)
- * TODO: Do we need this anymore?
- */
-function mapStartPosition() {
-
-//  var cookie = $.cookie('mapStatus');
-//  if (cookie) {
-//    defaultLocation = JSON.parse(cookie);
-//    return;
-//  }
-  return Drupal.settings.wsmap.defaultLocation;
+  map.panTo(new google.maps.LatLng(latitude, longitude));
 }
 
 
 /**
  * Load the adventure cycling overlay
+ *
  * @param kmzfile
  */
 function loadAdvCycling(kmzfile) {

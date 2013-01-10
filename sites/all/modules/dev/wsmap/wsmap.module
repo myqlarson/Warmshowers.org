@@ -52,13 +52,6 @@ function user_view_map()
  */
 
 function wsmap_view($uid = NULL, $zoom = 0) {
-
-  // Add jquery.cookie.
-  $cookie_path = libraries_get_path('jquery.cookie');
-  if (!empty($cookie_path)) {
-    drupal_add_js($cookie_path . '/jquery.cookie.js');
-  }
-
   $wsmap_path = drupal_get_path('module', 'wsmap');
 
   // JSON not supported in IE6/IE7, so we'll add conditional view of it.
@@ -99,6 +92,7 @@ function wsmap_view($uid = NULL, $zoom = 0) {
     $account = user_load($uid);
     $js_settings['wsmap']['userInfo'] = array(
       'uid' => $account->uid,
+      'account' => $account,
       'latitude' => $account->latitude,
       'longitude' => $account->longitude,
       'zoom' => $account->zoom,
