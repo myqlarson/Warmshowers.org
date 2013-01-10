@@ -12,6 +12,7 @@ var markerPositions = [];
 var markerImages = {};
 var markerCluster;
 var defaultLocation;
+var lastMapBounds;
 
 var adventure_cycling_overlay;
 var mapwidth; // Integer percent
@@ -72,7 +73,11 @@ Drupal.behaviors.wsmap = function (context) {
   markerCluster = new MarkerClusterer(map, [], {maxZoom:8 });
 
   google.maps.event.addListener(map, 'idle', function () {
-    var mapBounds = map.getBounds();
+    mapBounds = map.getBounds();
+    if (lastMapBounds && lastMapBounds.equals(mapBounds)) {
+      return;
+    };
+    lastMapBounds = mapBounds;
     var ne = mapBounds.getNorthEast();
     var sw = mapBounds.getSouthWest();
     var center = map.getCenter();
