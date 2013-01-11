@@ -15,7 +15,15 @@
     font-weight: bold;
 }
 
-.wsmap-credits {
+#wsmap-bottom {
     font-size: xx-small;
+}
+.wsmap-credits {
     text-align: right;
+    display: inline-block;
+    float: right;
+}
+#wsmap-load-status {
+    display: inline-block;
+    width: 50%;
 }

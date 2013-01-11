@@ -158,8 +158,13 @@ function addMarkersToMap(map, json) {
     });
     markers[host.uid] = marker;
     markerCluster.addMarker(marker);
+
   }
-  ;
+  var status = Drupal.t('All %total hosts in this map area are shown.', {'%total': parsed.status.totalresults});
+  if (i < parsed.status.totalresults) {
+    status = Drupal.t('Only %done of %total hosts in this map area were loaded.', {'%done': i, '%total': parsed.status.totalresults}) +'<br/>' + Drupal.t('Zoom in or move the map to see more detail.');
+  }
+  $('#wsmap-load-status').html(status);
 }
 
 function setMapLocationToCountry(countryCode) {
