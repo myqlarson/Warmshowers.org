@@ -87,6 +87,7 @@ function wsmap_initialize() {
     var sw = mapBounds.getSouthWest();
     var center = map.getCenter();
 
+    $('#wsmap-load-status').html(Drupal.t('Loading...'));
     // Note that the actual limit here is set by the Drupal variable.
     $.post('/services/rest/hosts/by_location',
       {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, function (json) {
@@ -111,8 +112,6 @@ function wsmap_initialize() {
         }
       });
   });
-
-  // google.maps.event.addDomListenerOnce(window, 'load', Drupal.behaviors.wsmap);
 }
 
 function addMarkersToMap(map, json) {
