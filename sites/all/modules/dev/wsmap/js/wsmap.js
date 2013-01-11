@@ -241,10 +241,12 @@ Drupal.theme.prototype.wsmap_infoWindow = function(marker) {
     html += '<div class="wsmap-infowindow-picture"><img src="/files/imagecache/map_infoWindow/' + host.picture + '"></div>';
     html += '<div class="wsmap-infowindow-hostinfo">';
     var cboxlink="/user/" + host.uid;
-    var link= '#';
+    var link = cboxlink;
     var colorbox='$.colorbox({href: \'' + cboxlink + '\', iframe: true, width: \'90%\', height: \'90%\' });'
 
-    html += '<a onclick="' + colorbox + '" href="' + link + '">' + host.name + '</a><br/>';
+    // html += '<a onclick="' + colorbox + '" href="' + link + '">' + host.name + '</a><br/>';
+    html += '<a target="_blank" href="' + link + '">' + host.name + '</a><br/>';
+
     if (host.street) { html += host.street + '<br/>'; }
     html += host.city + ', ' + host.province + ' ' + host.postal_code + ' ' + host.country;
     html += '</div>'; // end wsmap-infowindow-hostinfo
