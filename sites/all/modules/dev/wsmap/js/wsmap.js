@@ -70,7 +70,6 @@ function wsmap_initialize() {
       longitude: userInfo.longitude,
       zoom:10
     };
-    // zoomToUser(userInfo.uid, userInfo.latitude, userInfo.longitude, 10);
   }
 
   var mapOptions = {
@@ -90,20 +89,27 @@ function wsmap_initialize() {
 
     // Note that the actual limit here is set by the Drupal variable.
     $.post('/services/rest/hosts/by_location',
-      {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, function(json) {
+      {minlat:sw.lat(), maxlat:ne.lat(), minlon:sw.lng(), maxlon:ne.lng(), centerlat:center.lat(), centerlon:center.lng(), limit:2000 }, function (json) {
         addMarkersToMap(map, json);
 
-        // If we have a user location as the center, put up an infoWindow.
         if (userInfo) {
-          var content = userInfo.account.fullname;
-          if (userInfo.account.notcurrentlyavailable == "1") {
-            content = Drupal.t('Member is not currently available. Approximate location shown');
+          // If we are centering on a host and the host is already on the map,
+          // just do its normal infoWindow.
+          marker = markers[userInfo.uid] || null;
+          userInfo = null; // We only want to use this one time.
+          if (marker) {
+            infoWindow.setContent(Drupal.theme('wsmap_infoWindow', marker));
+            infoWindow.open(map, marker);
           }
-          infoWindow.setContent(content);
-          infoWindow.setPosition(mapOptions.center);
-          infoWindow.open(map);
+          // If we have a user location as the center, put up an infoWindow.
+          else {
+            content = Drupal.t('Member is not currently available.') + '<br/>' + Drupal.t('Approximate location shown');
+            infoWindow.setContent(content);
+            infoWindow.setPosition(mapOptions.center);
+            infoWindow.open(map);
+          }
         }
-    });
+      });
   });
 
   // google.maps.event.addDomListenerOnce(window, 'load', Drupal.behaviors.wsmap);
@@ -185,6 +191,9 @@ function setMapLocationToCountry(countryCode) {
 function zoomToSpecific(placename, latitude, longitude, zoom) {
   map.setZoom(zoom);
   map.panTo(new google.maps.LatLng(latitude, longitude));
+  infoWindow.setContent(placename);
+  infoWindow.setPosition(map.getCenter());
+  infoWindow.open(map);
 }
 
 
