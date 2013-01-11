@@ -13,7 +13,7 @@
 
 <div id='mapframe' style='width:100%;position:relative;clear:both;'>
     <div id='mapholder'>
-        <div id='wsmap_map' style='width:100%; height:540px'>
+        <div id='wsmap_map'>
         </div>
 
     </div>

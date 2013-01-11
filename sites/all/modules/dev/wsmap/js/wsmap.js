@@ -79,7 +79,11 @@ function wsmap_initialize() {
   };
 
   map = new google.maps.Map(document.getElementById("wsmap_map"), mapOptions);
-  markerCluster = new MarkerClusterer(map, [], {maxZoom:6 });
+  markerCluster = new MarkerClusterer(map, [],
+    {
+      maxZoom: Drupal.settings.wsmap.clusterer.maxZoom,
+      gridSize: Drupal.settings.wsmap.clusterer.gridSize
+    });
 
   google.maps.event.addListener(map, 'idle', function () {
     mapBounds = map.getBounds();

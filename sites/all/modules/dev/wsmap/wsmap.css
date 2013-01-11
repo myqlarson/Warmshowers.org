@@ -27,3 +27,7 @@
     display: inline-block;
     width: 50%;
 }
+#wsmap_map {
+    width:100%;
+    height:597px
+}
