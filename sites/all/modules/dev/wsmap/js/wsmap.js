@@ -84,6 +84,8 @@ function wsmap_initialize() {
       maxZoom: Drupal.settings.wsmap.clusterer.maxZoom,
       gridSize: Drupal.settings.wsmap.clusterer.gridSize
     });
+  var bikeLayer = new google.maps.BicyclingLayer();
+  bikeLayer.setMap(map);
 
   google.maps.event.addListener(map, 'idle', function () {
     mapBounds = map.getBounds();
