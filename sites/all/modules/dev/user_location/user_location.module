@@ -1,20 +1,26 @@
 <?php
 
-// $Id: user_location.module 547 2009-09-20 00:31:41Z rfay $
 
+global $source_desc;
+$source_desc = array(
+  1 => t("User-specified"),
+  2 => t("Nearly Exact, from Address Data"),
+  3 => t("Postal code lookup"),
+  4 => t("Premise-level accuracy (google)"),
+  5 => t("City/Province lookup"),
+  6 => t("City/Country lookup"),
+  7 => t("Regional Accuracy"),
+  8 => t('Center of country only'),
+);
 
-// Map location source type to text translation
-global $sources;
-$sources = array();
-$sources[1]=t("User-specified");
-$sources[2]=t("Nearly Exact, from Address Data");
-$sources[3]=t("Postal code lookup");
-$sources[4] = t("Premise-level accuracy (google)");
-
-$sources[5]=t("City/Province lookup");
-$sources[6]=t("City/Country lookup");
-$sources[7] = t("Regional Accuracy");
-$sources[8] = t('Center of country only');
+function wsuser_source_to_description($source) {
+  // Map location source type to text translation
+  $desc = t('unknown');
+  if (!empty($GLOBALS['source_desc'][$source])) {
+    $desc = $GLOBALS['source_desc'][$source];
+  }
+  return $desc;
+}
 
 /**
  * Get all the fields and their config items.
@@ -102,6 +108,21 @@ function user_location_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_theme()
+ *
+ * @return array
+ */
+function user_location_theme() {
+  $items = array(
+    'user_location_setlocation' => array(
+      'arguments' => array('account' => NULL, 'sources' => NULL),
+      'template' => 'user-location-setlocation',
+      ),
+  );
+  return $items;
+
+}
 /**
  * Determine whether user has access to set location on map
  * @return unknown_type
@@ -1041,53 +1062,24 @@ function _user_location_map_set_lat_long($account) {
   $key = variable_get("user_location_google_key", "");
   $path = drupal_get_path('module','user_location');
 
-  drupal_set_html_head('
-   		<script src="http://maps.google.com/maps?file=api&v=2.x&key='.$key .'" type="text/javascript"></script>');
-  drupal_add_js("$path/setlocation.js");
-
+  $google_map_location = "https://maps.googleapis.com/maps/api/js?sensor=false&key=" . variable_get('user_location_google_key', '0');
+  drupal_set_html_head("<script src='$google_map_location'  type='text/javascript'></script>");
+  drupal_add_js("$path/user_location_setlocation.js");
   drupal_add_css($path . '/user_location.css');
 
-  if (!isset($account->latitude) ||  !isset($account->longitude)) {
-    $ret = '<div class="mapholder">' . t("There is no map for this host because the latitude and longitude have not been confirmed."). '</div>';
-  } else {
-    $ret = '
+  $settings = array(
+    'user_location' => array(
+      'location' => array(
+        'latitude' => $account->latitude,
+        'longitude' => $account->longitude,
+      )
+    )
+  );
+  drupal_add_js($settings, 'setting');
 
-	<div class="mapholder">
-	<p>' . t('Here is a map showing where the website currently thinks you live.
-	Please move the map and zoom in to the exact correct location, and
-	click in that location to select the latitude and longitude of the
-	point you double-click on. Alternately, you can fill in the exact location
-	(in decimal form) on the form below. Then click "submit" to update your coordinates.') . '
-	</p>
-	<div id="locationset" style="width: 100%; height: 480px; border: 1px solid black;">
-	    <b>'. t('Sorry, you need a more recent browser (IE6+, Firefox, etc.) and javascript must be turned on. JavaScript must be enabled in order for you to see or use the maps on Warmshowers.org.</b>
-      However, it seems JavaScript is either disabled or not supported by your browser.
-      To view the map, enable JavaScript by changing your browser options, and then
-      try again.  Alternately, you might want to try the excellent free <a href="http://getfirefox.com">Firefox browser</a>.<br/><br/>
-      You <i>can</i> enter your latitude and longitude below in decimal format.') .'
-	</noscript>
-	</div>
-	<div id="locationmap_debug" class="debug" ></div>
-';
-
-    $ret .= '<div id="location_lat"  class="debug">' . $account->latitude . "</div>";
-    $ret .= '<div id="location_lon" class="debug">' . $account->longitude. "</div>";
-    $ret .= "<div>" . t('Geocoding accuracy = '). $account->source . " (" ;
-    if ($sources[$account->source]) {
-      $ret .= $sources[$account->source];
-    } else {
-      $ret .= t("unknown");
-    }
-    $ret .=  ") </div>";
-    $ret .= t("Need a <a target='_blank' href='http://www.fcc.gov/mb/audio/bickel/DDDMMSS-decimal.html'>converter from decimal to degrees/minutes/seconds</a> or back? ");
-
-    $ret .= "</div>";
-
-    $ret .= drupal_get_form("user_location_set_map_location", $account);
-
-  }
-  return $ret;
-
+  $output = theme('user_location_setlocation', $account, $sources);
+  $output .= drupal_get_form("user_location_set_map_location", $account);
+  return $output;
 }
 
 
@@ -1100,21 +1092,23 @@ function _user_location_map_set_lat_long($account) {
  */
 function user_location_set_map_location(&$form_state, $user)
 {
-  $form['#id'] = 'latlon';
   $form['setlocation'] = array('#type' => 'fieldset',
     '#title' => t("Set Location from the map"),
+    '#description' => t('Enter your latitude/longitude or click on the map.'),
   );
   $form['setlocation']['latitude'] = array(
 		'#title' => t('Latitude'),
 		'#type' => 'textfield',
-		'#description' => t('Enter your latitude or select on the map above'),
+		//'#description' => t('Enter your latitude or click on the map'),
 		'#default_value' => $user->latitude,
+    '#size' => 15,
   );
   $form['setlocation']['longitude'] = array(
 		'#title' => t('Longitude'),
 		'#type' => 'textfield',
-		'#description' => t('Enter your longitude or select on the map above'),
+		//'#description' => t('Enter your longitude or click on the map'),
 		'#default_value' => $user->longitude,
+    '#size' => 15,
   );
   $form['setlocation']['submit'] = array(
 		'#type' => 'submit',
